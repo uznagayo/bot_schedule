@@ -7,7 +7,7 @@ DB_PATH = "schedule.db"
 conn = sqlite3.connect("schedule.db")
 cursor = conn.cursor()
 
-# cursor.execute(f'DELETE FROM schedule WHERE user_id = {1}')
+cursor.execute(f'DELETE FROM schedule WHERE user_id = {5}')
 
 # cursor.execute(
 #     """
@@ -44,9 +44,9 @@ cursor = conn.cursor()
 # FOREIGN KEY(shift_id) REFERENCES shifts(id)
 # )
 # """)
-# print("done")
-# conn.commit()
-# conn.close()
+print("done")
+conn.commit()
+conn.close()
 
 # def get_next_week_sheeets():
 #    shift_ids = list(range(1, 14))

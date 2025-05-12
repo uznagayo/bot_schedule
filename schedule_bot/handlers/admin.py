@@ -38,18 +38,23 @@ async def send_schedule_file(message: types.Message):
             return
 
         # Сохраняем как CSV
-        file_path = f"utils/schedule_{start_str} - {end_str}.csv"
+        BASE_DIR = os.path.dirname(__file__)
+        file_path = os.path.join(BASE_DIR, 'exports', f"schedule_{start_str} - {end_str}.csv")
+
+        os.makedirs(os.path.dirname(file_path), exist_ok=True)
         with open(file_path, "w", encoding="utf-8-sig", newline="") as f:
             writer = csv.writer(f, delimiter=";", lineterminator="\n")
             writer.writerow(["Дата", "Начало", " Конец", "Имя", "День"])
             writer.writerows(shifts)
 
+        file = types.FSInputFile(file_path)
 
-        await message.answer_document(types.InputFile(file_path))
+        await message.answer_document(file)
         os.remove(file_path)
 
 
     except Exception as e:
+        print(e)
         await message.answer(
             "Неверный формат. Введите: расписание ГГГГ-ММ-ДД ГГГГ-ММ-ДД"
         )
