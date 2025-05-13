@@ -10,7 +10,7 @@ async def main():
 
     dp.message.middleware(IsRegisteredMiddleware())
     dp.callback_query.middleware(IsRegisteredMiddleware())
-
+    
     for router in all_routers:
         dp.include_router(router)
 

@@ -1,8 +1,15 @@
 import sqlite3
 from handlers.config import DB_PATH
 from datetime import datetime, timedelta
+import json
+from random import choice
 
 
+def send_meme():
+    with open("schedule_bot/memes.json", "r") as file:
+        memes = json.load(file)
+    meme = choice(memes)
+    return meme
 
 def get_user_id(telegram_id: int):
     with sqlite3.connect(DB_PATH) as conn:
