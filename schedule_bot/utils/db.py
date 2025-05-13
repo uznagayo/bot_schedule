@@ -5,6 +5,21 @@ import json
 from random import choice
 
 
+def get_user_role(telegram_id: int):
+    with sqlite3.connect(DB_PATH) as conn:
+        cursor = conn.cursor()
+        cursor.execute(
+            """
+        SELECT role
+        FROM users
+        WHERE telegram_id = ?
+        """,
+            (telegram_id,),
+        )
+        result = cursor.fetchone()
+        return result[0] if result else None
+
+
 def send_meme():
     with open("schedule_bot/memes.json", "r", encoding='utf-8') as file:
         memes = json.load(file)

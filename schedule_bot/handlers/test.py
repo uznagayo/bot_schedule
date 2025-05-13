@@ -5,8 +5,18 @@ import csv, os
 
 conn = sqlite3.connect(DB_PATH)
 cursor = conn.cursor()
-cursor.execute('SELECT user_id FROM schedule')
+cursor.execute('SELECT * FROM users')
 print(cursor.fetchall())
+
+
+# for i in range(int(input())):
+#     cursor.execute(
+#         """
+#         INSERT OR REPLACE INTO users (telegram_id, full_name, role)
+#         VALUES (?, ?, ?)
+#         """,
+#         (int(input()), input(), 'ancient'),
+#     )
 
 # data = "расписание 2025-04-01 2025-05-20"
 # _, start_str, end_str = data.split()

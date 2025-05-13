@@ -1,7 +1,7 @@
 from aiogram import Router, F, types
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 from datetime import datetime, timedelta
-from utils.db import get_user_id, get_schedule, get_next_week_sheeets
+from utils.db import get_user_id, get_schedule, get_next_week_sheeets, get_user_role
 
 schedule_router = Router()
 
@@ -43,6 +43,10 @@ async def send_shedule(message: types.Message):
 
 
 async def new_schedule(message: types.Message):
+    user_role = get_user_role(message.from_user.id)
+    if user_role == "ancient":
+        await message.answer("Эта кнопка не тебе")
+        return
     shift_id, next_week_names, dates = get_next_week_sheeets()
     keybroad = InlineKeyboardMarkup(inline_keyboard=[])
     for i in range(len(shift_id)):
