@@ -1,13 +1,13 @@
 import sqlite3
-
+from handlers.config import DB_PATH
 from datetime import datetime, timedelta
 
-DB_PATH = "schedule.db"
 
-conn = sqlite3.connect("schedule.db")
+
+conn = sqlite3.connect(DB_PATH)
 cursor = conn.cursor()
 
-cursor.execute(f'DELETE FROM schedule WHERE user_id = {5}')
+cursor.execute(f'DELETE FROM schedule WHERE user_id = {8}')
 
 # cursor.execute(
 #     """

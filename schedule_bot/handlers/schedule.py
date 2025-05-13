@@ -8,6 +8,7 @@ schedule_router = Router()
 
 @schedule_router.message(F.text == "Мое расписание")
 async def my_schedule(message: types.Message):
+    print(message.from_user.first_name, 'act_send_my_shedule')
     await message.delete()
     await this_week(message)
 
@@ -36,6 +37,7 @@ async def this_week(message):
 
 @schedule_router.message(F.text == "По сменам")
 async def send_shedule(message: types.Message):
+    print(message.from_user.first_name, 'act_send_new_shedule')
     await new_schedule(message)
     await message.delete()
 

@@ -19,6 +19,7 @@ async def callback_message(callback: CallbackQuery):
     data = callback.data
 
     _, date_str, shift_id, start_time, end_time = data.split(",")
+    print(callback.from_user.first_name, 'choose', date_str, shift_id, start_time, end_time)
     with sqlite3.connect(DB_PATH) as conn:
         conn.execute(
             """

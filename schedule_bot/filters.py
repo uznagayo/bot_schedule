@@ -21,8 +21,10 @@ class IsRegisteredMiddleware(BaseMiddleware):
         user_id = event.from_user.id
         if not is_user_registered(user_id):
             if isinstance(event, Message):
+                print(event.from_user.id, event.from_user.first_name, "не зарегистрирован")
                 await event.answer("Ты не зарегистрирован в системе.")
             elif isinstance(event, CallbackQuery):
+                print(event.from_user.id, event.from_user.first_name, "не зарегистрирован")
                 await event.answer("Ты не зарегистрирован в системе.", show_alert=True)
             return
         return await handler(event, data)

@@ -3,10 +3,10 @@ from config import DB_PATH
 import csv, os
 
 
-# conn = sqlite3.connect(DB_PATH)
-# cursor = conn.cursor()
-# cursor.execute('SELECT telegram_id FROM users')
-# print(cursor.fetchall())
+conn = sqlite3.connect(DB_PATH)
+cursor = conn.cursor()
+cursor.execute('SELECT user_id FROM schedule')
+print(cursor.fetchall())
 
 # data = "расписание 2025-04-01 2025-05-20"
 # _, start_str, end_str = data.split()
@@ -47,6 +47,6 @@ import csv, os
 
 # cursor.execute(f'DELETE FROM schedule WHERE user_id = {1}')
 
-# print("done")
-# conn.commit()
-# conn.close()
+print("done")
+conn.commit()
+conn.close()
