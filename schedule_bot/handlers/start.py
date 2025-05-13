@@ -27,5 +27,6 @@ async def start(message: types.Message):
 @start_router.message(Command('send_meme'))
 async def send_meme_handler(message: types.Message):
     meme = send_meme()
+    print(message.from_user.first_name, 'заказал мем')
     await message.answer_photo(photo=meme, caption="Вот тебе мем, епт")
 

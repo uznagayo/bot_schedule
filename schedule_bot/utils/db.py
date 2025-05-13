@@ -6,7 +6,7 @@ from random import choice
 
 
 def send_meme():
-    with open("schedule_bot/memes.json", "r") as file:
+    with open("schedule_bot/memes.json", "r", encoding='utf-8') as file:
         memes = json.load(file)
     meme = choice(memes)
     return meme
