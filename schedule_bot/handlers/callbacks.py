@@ -2,9 +2,9 @@ from aiogram import Router, types
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton, CallbackQuery
 import sqlite3, csv, os
 from .config import DB_PATH
-from utils.db import get_user_id, get_next_week_sheeets
-from .schedule import new_schedule
-
+from utils.db import get_user_id, get_next_week_sheeets, get_user_role
+from .schedule import new_schedule, this_week
+from .commands import start
 
 callbacks_router = Router()
 
@@ -32,7 +32,31 @@ async def callback_message(callback: CallbackQuery):
     await callback.message.answer(
         f"Выбрано: {date_str} — смена {start_time}-{end_time}"
     )
-    await callback.message.delete()
-    await new_schedule(callback.message)
+    await callback.message.edit_reply_markup(reply_markup=new_schedule())
 
 
+@callbacks_router.callback_query(lambda c: c.data =="my_schedule_key")
+async def my_schedule(callback: CallbackQuery):
+    print(callback.from_user.first_name, 'act_send_my_shedule')
+    await this_week(callback)
+
+@callbacks_router.callback_query(lambda c: c.data == "new_schedule_key")
+async def send_shedule(callback: CallbackQuery):
+    print(callback.from_user.first_name, 'act_send_new_shedule')
+    user_role = get_user_role(callback.from_user.id)
+    if user_role == "ancient":
+        await callback.answer("Эта кнопка не тебе")
+        return
+    
+    if not new_schedule():
+        await callback.message.answer("Свободных смен нету")
+    else:
+        await callback.message.edit_text("Сободные смены:")
+        await callback.message.edit_reply_markup(reply_markup=new_schedule())
+
+    
+
+@callbacks_router.callback_query(lambda c: c.data == "back_to_main_menu")
+async def back_to_main_menu(callback: CallbackQuery):
+    await callback.message.edit_text("Главное меню")
+    await callback.message.edit_reply_markup(reply_markup=start(callback))
