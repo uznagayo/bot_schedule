@@ -28,8 +28,9 @@ async def this_week(callback: types.CallbackQuery):
         return
 
     # message1 = "Твое расписание на текущую неделю:\n"
+    keybroad = InlineKeyboardMarkup(inline_keyboard=[])
     for id, day, date, start, end in schedule:
-        keybroad = InlineKeyboardMarkup(inline_keyboard=[])
+        
         button = InlineKeyboardButton(
             text=f'{day} ({date}) - {start}–{end}',
             callback_data=(f"shift_key,{id}"),

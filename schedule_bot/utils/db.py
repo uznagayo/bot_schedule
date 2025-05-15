@@ -21,10 +21,11 @@ def get_user_role(telegram_id: int):
 
 
 def send_meme():
-    with open("schedule_bot/memes.json", "r", encoding='utf-8') as file:
+    with open("schedule_bot/memes.json", "r", encoding="utf-8") as file:
         memes = json.load(file)
     meme = choice(memes)
     return meme
+
 
 def get_user_id(telegram_id: int):
     with sqlite3.connect(DB_PATH) as conn:
@@ -32,7 +33,8 @@ def get_user_id(telegram_id: int):
             "SELECT id FROM users WHERE telegram_id = ?", (telegram_id,)
         ).fetchone()
         return result[0] if result else None
-    
+
+
 def get_schedule(user_id, start_date: datetime):
     end_date = start_date + timedelta(days=13)
     with sqlite3.connect(DB_PATH) as conn:
@@ -49,6 +51,7 @@ def get_schedule(user_id, start_date: datetime):
         )
         return cursor.fetchall()
 
+
 def get_users_name(user_id: int):
     with sqlite3.connect(DB_PATH) as conn:
         cursor = conn.cursor()
@@ -60,6 +63,7 @@ def get_users_name(user_id: int):
         )
         users = [i[0] for i in cursor.fetchall() if user_id not in i]
         return users
+
 
 def get_next_week_sheeets():
     shift_ids = list(range(1, 14))
@@ -93,22 +97,18 @@ def get_next_week_sheeets():
                 dates.pop(shift_ids.index(i))
                 shift_ids.remove(i)
 
-        
     return shift_ids, shifts_name, dates
 
 
-def delete_shift(shift_id: int):
-    try:
-        with sqlite3.connect(DB_PATH) as conn:
-            cursor = conn.cursor()
-            cursor.execute(
-                """
-            DELETE FROM shifts
+def delete_shift_not(shift_id: int):
+
+    with sqlite3.connect(DB_PATH) as conn:
+        cursor = conn.cursor()
+        cursor.execute(
+            """
+            DELETE FROM schedule
             WHERE id = ?
             """,
-                (shift_id,),
-            )
-            conn.commit()
-    except Exception as e: 
-        print(f"чет не так {e}")
-        return False
+            (shift_id,),
+        )
+        conn.commit()
