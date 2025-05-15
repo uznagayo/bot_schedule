@@ -3,8 +3,10 @@ from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton, CallbackQu
 import sqlite3, csv, os
 from .config import DB_PATH
 from utils.db import get_user_id, get_next_week_sheeets, get_user_role
-from .schedule import new_schedule, this_week
+from .shifts import new_schedule, this_week
 from .commands import start
+
+
 
 callbacks_router = Router()
 
@@ -60,3 +62,48 @@ async def send_shedule(callback: CallbackQuery):
 async def back_to_main_menu(callback: CallbackQuery):
     await callback.message.edit_text("Главное меню")
     await callback.message.edit_reply_markup(reply_markup=start(callback))
+
+@callbacks_router.callback_query(lambda c: c.data == "hash_key")
+async def hash(callback: CallbackQuery):
+    await callback.message.answer(
+        "Введи начальную и конечную дату в формате ГГГГ-ММ-ДД через пробел и не забудь кодовое слово!"
+    )
+
+@callbacks_router.callback_query(lambda c: c.data.startswith ("shift_key"))
+async def shift_key(callback: CallbackQuery):
+    data = callback.data
+    _, id = data.split(",")
+    keybroad = InlineKeyboardMarkup(inline_keyboard=[])
+    buttuns = [
+        InlineKeyboardButton(
+            text="Удалить смену",
+            callback_data=f"delete_shift,{id}",
+        ),
+        InlineKeyboardButton(
+            text="Отдать смену",
+            callback_data=f"give_shift,{id}",
+        ),
+        InlineKeyboardButton(
+            text="Назад",
+            callback_data="my_schedule_key",
+        ),
+    ]
+    keybroad.inline_keyboard.append(buttuns)
+    await callback.message.edit_text("Что сделать хочешь?")
+    await callback.message.edit_reply_markup(reply_markup=keybroad)
+
+@callbacks_router.callback_query(lambda c: c.data.startswith("delete_shift"))
+async def delete_shift(callback: CallbackQuery):
+    data = callback.data
+    _, id = data.split(",")
+    with sqlite3.connect(DB_PATH) as conn:
+        conn.execute(
+            """
+        DELETE FROM schedule
+        WHERE id = ?
+        """,
+            (id,),
+        )
+    await callback.answer("Смена удалена!")
+    await callback.message.edit_text("Главное меню")
+    await callback.message.edit_reply_markup(reply_markup=start(callback)) 

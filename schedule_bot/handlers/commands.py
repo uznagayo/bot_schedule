@@ -9,11 +9,11 @@ def start(message: types.Message):
         InlineKeyboardButton(text="По сменам", callback_data="new_schedule_key"),
         InlineKeyboardButton(text="Мое расписание", callback_data="my_schedule_key"),
     ]
-    # if user_id == 357434524:
-    #     buttons.append(
-    #         [
-    #             InlineKeyboardButton(text="Hash", callback_data="hash_key"),
-    #         ]
-    #     )
+    if user_id == 357434524:
+        buttons.append(
+            
+                InlineKeyboardButton(text="Hash", callback_data="hash_key"),
+            
+        )
     keybroad.inline_keyboard.append(buttons)
     return keybroad

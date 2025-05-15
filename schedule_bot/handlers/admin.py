@@ -6,15 +6,18 @@ from .config import DB_PATH
 admin_router = Router()
 
 
-@admin_router.message(lambda m: m.text == "Hash")
-async def hash(message: types.Message):
-    await message.answer(
-        "Введи начальную и конечную дату в формате ГГГГ-ММ-ДД через пробел и не забудь кодовое слово!"
-    )
+# @admin_router.message(lambda m: m.text == "Hash")
+# async def hash(message: types.Message):
+#     await message.answer(
+#         "Введи начальную и конечную дату в формате ГГГГ-ММ-ДД через пробел и не забудь кодовое слово!"
+#     )
 
 
 @admin_router.message(lambda message: message.text.startswith("расписание "))
 async def send_schedule_file(message: types.Message):
+    user_id = message.from_user.id
+    if user_id != 357434524:
+        return
     try:
         # Ожидаем сообщение вида "расписание 2025-05-01 2025-05-10"
         _, start_str, end_str = message.text.split()

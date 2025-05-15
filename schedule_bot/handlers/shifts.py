@@ -27,12 +27,26 @@ async def this_week(callback: types.CallbackQuery):
         await callback.message.answer("На этой неделе у тебя пока нет смен.")
         return
 
-    message1 = "Твое расписание на текущую неделю:\n"
-    for date, start, end in schedule:
-        weekday = datetime.strptime(date, "%Y-%m-%d").strftime("%A")
-        message1 += f"{weekday} ({date}): {start}–{end}\n"
+    # message1 = "Твое расписание на текущую неделю:\n"
+    for id, day, date, start, end in schedule:
+        keybroad = InlineKeyboardMarkup(inline_keyboard=[])
+        button = InlineKeyboardButton(
+            text=f'{day} ({date}) - {start}–{end}',
+            callback_data=(f"shift_key,{id}"),
+        )
+        keybroad.inline_keyboard.append([button])
 
-    await callback.message.answer(message1)
+    keybroad.inline_keyboard.append(
+            [
+                InlineKeyboardButton(
+                    text="Назад",
+                    callback_data="back_to_main_menu",
+                )
+            ]
+        )
+
+    await callback.message.edit_text(text="Твое расписание на текущую неделю")
+    await callback.message.edit_reply_markup(reply_markup=keybroad)
 
 
 # @schedule_router.message(F.text == "По сменам")
@@ -63,3 +77,5 @@ def new_schedule():
     )
     return keybroad
 
+
+# def shift_swap

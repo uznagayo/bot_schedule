@@ -5,7 +5,7 @@ import csv, os
 
 conn = sqlite3.connect(DB_PATH)
 cursor = conn.cursor()
-cursor.execute('SELECT * FROM users')
+cursor.execute('SELECT user_id FROM schedule')
 print(cursor.fetchall())
 
 

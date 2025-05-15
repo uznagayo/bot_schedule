@@ -39,7 +39,7 @@ def get_schedule(user_id, start_date: datetime):
         cursor = conn.cursor()
         cursor.execute(
             """
-        SELECT date, actual_start, actual_end
+        SELECT schedule.id, day_of_week, date, actual_start, actual_end
         FROM schedule
         JOIN shifts ON schedule.shift_id = shifts.id
         WHERE user_id = ? AND date BETWEEN ? AND ?
@@ -97,3 +97,18 @@ def get_next_week_sheeets():
     return shift_ids, shifts_name, dates
 
 
+def delete_shift(shift_id: int):
+    try:
+        with sqlite3.connect(DB_PATH) as conn:
+            cursor = conn.cursor()
+            cursor.execute(
+                """
+            DELETE FROM shifts
+            WHERE id = ?
+            """,
+                (shift_id,),
+            )
+            conn.commit()
+    except Exception as e: 
+        print(f"чет не так {e}")
+        return False

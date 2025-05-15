@@ -1,5 +1,5 @@
 from .start import start_router
-from .schedule import schedule_router
+from .shifts import schedule_router
 from .callbacks import callbacks_router
 from .admin import admin_router
 
