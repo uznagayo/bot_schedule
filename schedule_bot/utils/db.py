@@ -112,3 +112,19 @@ def delete_shift_not(shift_id: int):
             (shift_id,),
         )
         conn.commit()
+
+
+def get_telegram_ids(role: str):
+    with sqlite3.connect(DB_PATH) as conn:
+        cursor = conn.cursor()
+        cursor.execute(
+            """
+            SELECT telegram_id
+            FROM users
+            WHERE role = ?
+            """,
+            (role,),
+        )
+        result = cursor.fetchall()
+        return [i[0] for i in result]
+    

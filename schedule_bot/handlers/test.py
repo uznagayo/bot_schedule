@@ -5,17 +5,21 @@ import csv, os
 
 conn = sqlite3.connect(DB_PATH)
 cursor = conn.cursor()
-cursor.execute('SELECT user_id FROM schedule')
+cursor.execute('SELECT full_name, role FROM users WHERE telegram_id = 1123135677')
 print(cursor.fetchall())
+
+# cursor.execute(
+#     "UPDATE users SET role = 'ancient' WHERE full_name = 'Левацкий Артём Юрьевич'"
+# )
 
 
 # for i in range(int(input())):
 #     cursor.execute(
 #         """
-#         INSERT OR REPLACE INTO users (telegram_id, full_name, role)
-#         VALUES (?, ?, ?)
+#         INSERT OR REPLACE INTO users (telegram_id, full_name)
+#         VALUES (?, ?)
 #         """,
-#         (int(input()), input(), 'ancient'),
+#         (int(input()), input()),
 #     )
 
 # data = "расписание 2025-04-01 2025-05-20"

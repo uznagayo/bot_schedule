@@ -7,7 +7,7 @@ from datetime import datetime, timedelta
 conn = sqlite3.connect(DB_PATH)
 cursor = conn.cursor()
 
-cursor.execute(f'DELETE FROM schedule WHERE user_id = {4}')
+cursor.execute(f'DELETE FROM users WHERE telegram_id = {262785085}')
 
 # cursor.execute(
 #     """

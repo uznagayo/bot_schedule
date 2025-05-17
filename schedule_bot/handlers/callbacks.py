@@ -2,7 +2,7 @@ from aiogram import Router, types, Bot
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton, CallbackQuery
 import sqlite3, csv, os
 from .config import DB_PATH
-from utils.db import get_user_id, get_next_week_sheeets, get_user_role, delete_shift_not
+from utils.db import get_user_id, get_next_week_sheeets, get_user_role, delete_shift_not, get_telegram_ids
 from .shifts import new_schedule, this_week
 from .commands import start
 
@@ -116,3 +116,23 @@ async def delete_shift(callback: CallbackQuery):
     except Exception as e:
         print(e)
         await callback.answer("Ошибка удаления смены. Попробуй позже.")
+
+@callbacks_router.callback_query(lambda c: c.data == "emploee_summon_key")
+async def emploee_summon_callback(callback: CallbackQuery):
+    await callback.answer("Вызов младшего")
+    
+    for id in get_telegram_ids('employee'):
+        try:
+            await callback.bot.send_message(
+            chat_id=id,
+            text=f"{callback.from_user.first_name} вызвал младшего на сегодня, с любого времени",
+        )
+            print(f"Message sent to {id}")
+        except Exception as e:
+            print(f"Failed to send message to {id}: {e}")
+            await callback.answer("Ошибка вызова младшего. Попробуй позже.")
+            
+    print(
+        
+        text=f"{callback.from_user.first_name} вызвал младшего",
+    )
