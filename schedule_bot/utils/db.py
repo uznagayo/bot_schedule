@@ -97,7 +97,24 @@ def get_next_week_sheeets():
                 dates.pop(shift_ids.index(i))
                 shift_ids.remove(i)
 
-    return shift_ids, shifts_name, dates
+        days = []
+        times = []
+        # print(shifts_name)
+        for k in range(len(shifts_name)):
+            day, time = shifts_name[k].split(" ")[0], ",".join(
+                shifts_name[k].split(" ")[1:]
+            )
+            days.append(day)
+            times.append(time)
+
+    # print(
+    #     shift_ids,
+    #     days,
+    #     times,
+    #     dates,
+    # )
+
+    return shift_ids, days, times, dates
 
 
 def delete_shift_not(shift_id: int):
@@ -127,4 +144,19 @@ def get_telegram_ids(role: str):
         )
         result = cursor.fetchall()
         return [i[0] for i in result]
-    
+
+
+def get_shift_id_onday(day: str):
+    with sqlite3.connect(DB_PATH) as conn:
+        cursor = conn.cursor()
+        cursor.execute(
+            """
+        SELECT id
+        FROM shifts
+        WHERE day_of_week = ?
+        """,
+            (day,),
+        )
+        shift_ids = [i[0] for i in cursor.fetchall()]
+        print(shift_ids)
+        return shift_ids

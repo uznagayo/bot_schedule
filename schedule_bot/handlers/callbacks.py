@@ -2,16 +2,33 @@ from aiogram import Router, types, Bot
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton, CallbackQuery
 import sqlite3, csv, os
 from .config import DB_PATH
-from utils.db import get_user_id, get_next_week_sheeets, get_user_role, delete_shift_not, get_telegram_ids
-from .shifts import new_schedule, this_week
-from .commands import start
+from utils.db import (
+    get_user_id,
+    get_next_week_sheeets,
+    get_user_role,
+    delete_shift_not,
+    get_telegram_ids,
+    get_shift_id_onday,
+)
+from .shifts import new_schedule, this_week, new_schedule_days
+from .commands import start_true
 
 
 callbacks_router = Router()
 
 
+@callbacks_router.callback_query(lambda c: c.data.startswith("new_shift_day_key"))
+async def new_shift_day_key(callback: CallbackQuery):
+    data = callback.data
+    day = data.split(",")[-1]
+    # print(day)
+    shift_ids = get_shift_id_onday(day)
+    keybroad = new_schedule(shift_ids)
+    await callback.message.edit_reply_markup(reply_markup=keybroad)
+
+
 @callbacks_router.callback_query(lambda c: c.data.startswith("new_shift_key"))
-async def callback_message(callback: CallbackQuery):
+async def new_shift_key(callback: CallbackQuery):
     user_id = get_user_id(callback.from_user.id)
     if not user_id:
         await callback.answer("Ты не зарегистрирован.")
@@ -36,11 +53,12 @@ async def callback_message(callback: CallbackQuery):
         """,
             (user_id, date_str, int(shift_id), start_time, end_time),
         )
-    
+
     await callback.answer(
         f"Выбрано: {date_str} — смена {start_time}-{end_time}", show_alert=True
     )
-    await callback.message.edit_reply_markup(reply_markup=new_schedule())
+
+    await new_schedule_days(callback)
 
 
 @callbacks_router.callback_query(lambda c: c.data == "my_schedule_key")
@@ -49,7 +67,7 @@ async def my_schedule(callback: CallbackQuery):
     await this_week(callback)
 
 
-@callbacks_router.callback_query(lambda c: c.data == "new_schedule_key")
+@callbacks_router.callback_query(lambda c: c.data.startswith("new_schedule_day_key"))
 async def send_shedule(callback: CallbackQuery):
     print(callback.from_user.first_name, "act_send_new_shedule")
     # user_role = get_user_role(callback.from_user.id)
@@ -57,18 +75,17 @@ async def send_shedule(callback: CallbackQuery):
     #     await callback.answer("Эта кнопка не тебе")
     #     return
 
-    if not new_schedule():
+    if not new_schedule_days(callback):
         await callback.answer("Свободных смен нету", show_alert=True)
         return
     else:
-        await callback.message.edit_text("Сободные смены:")
-        await callback.message.edit_reply_markup(reply_markup=new_schedule())
+        await new_schedule_days(callback)
 
 
 @callbacks_router.callback_query(lambda c: c.data == "back_to_main_menu")
 async def back_to_main_menu(callback: CallbackQuery):
     await callback.message.edit_text("Главное меню")
-    await callback.message.edit_reply_markup(reply_markup=start(callback))
+    await callback.message.edit_reply_markup(reply_markup=start_true(callback))
 
 
 @callbacks_router.callback_query(lambda c: c.data == "hash_key")
@@ -109,9 +126,8 @@ async def delete_shift(callback: CallbackQuery):
     _, id = data.split(",")
     try:
         delete_shift_not(id)
-        await callback.answer("Смена удалена!")
-        await callback.message.edit_text("Главное меню")
-        await callback.message.edit_reply_markup(reply_markup=start(callback))
+        await callback.answer("Смена удалена!", show_alert=True)
+        await this_week(callback)
         await callback.bot.send_message(
             chat_id=357434524, text=f"{callback.from_user.first_name} удалил смену {id}"
         )
@@ -119,22 +135,22 @@ async def delete_shift(callback: CallbackQuery):
         print(e)
         await callback.answer("Ошибка удаления смены. Попробуй позже.")
 
+
 @callbacks_router.callback_query(lambda c: c.data == "emploee_summon_key")
 async def emploee_summon_callback(callback: CallbackQuery):
     await callback.answer("Вызов младшего")
-    
-    for id in get_telegram_ids('employee'):
+
+    for id in get_telegram_ids("employee"):
         try:
             await callback.bot.send_message(
-            chat_id=id,
-            text=f"{callback.from_user.first_name} вызвал младшего на сегодня, с любого времени",
-        )
+                chat_id=id,
+                text=f"{callback.from_user.first_name} вызвал младшего на сегодня, с любого времени",
+            )
             print(f"Message sent to {id}")
         except Exception as e:
             print(f"Failed to send message to {id}: {e}")
             await callback.answer("Ошибка вызова младшего. Попробуй позже.")
-            
+
     print(
-        
         text=f"{callback.from_user.first_name} вызвал младшего",
     )

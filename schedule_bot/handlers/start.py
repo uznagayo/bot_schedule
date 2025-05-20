@@ -2,7 +2,7 @@ from aiogram import Router, F, types
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 from aiogram.filters import Command
 from utils.db import send_meme
-from .commands import start
+from .commands import start_true
 
 start_router = Router()
 
@@ -22,11 +22,11 @@ async def start_command(message: types.Message):
     #         ]
     #     )
     # keybroad.inline_keyboard.append(buttons)
-    await message.answer("Дарова епт", reply_markup=start(message))
+    await message.answer("Дарова епт", reply_markup=start_true(message))
 
 
 @start_router.message(Command("send_meme"))
 async def send_meme_handler(message: types.Message):
     meme = send_meme()
-    print(message.from_user.first_name, "заказал мем")
+    print(message.from_user.first_name, "заказал мем") # type: ignore
     await message.answer_photo(photo=meme, caption="Вот тебе мем, епт")

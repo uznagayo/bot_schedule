@@ -2,15 +2,15 @@ from aiogram import Router, F, types
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 from utils.db import get_user_role
 
-def start(message: types.Message):
+def start_true(message: types.Message):
     role = get_user_role(message.from_user.id)
     user_id = message.from_user.id
-    keybroad = InlineKeyboardMarkup(inline_keyboard=[], row_width=2)
+    keybroad = InlineKeyboardMarkup(inline_keyboard=[])
     print(role)
 
 
     buttons = [
-            InlineKeyboardButton(text="По сменам", callback_data="new_schedule_key"),
+            InlineKeyboardButton(text="По сменам", callback_data="new_schedule_day_key"),
             InlineKeyboardButton(text="Мое расписание", callback_data="my_schedule_key"),
         ]
 
