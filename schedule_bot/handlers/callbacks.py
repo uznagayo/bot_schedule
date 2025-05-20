@@ -36,9 +36,9 @@ async def callback_message(callback: CallbackQuery):
         """,
             (user_id, date_str, int(shift_id), start_time, end_time),
         )
-    await callback.answer("Смена добавлена!")
-    await callback.message.answer(
-        f"Выбрано: {date_str} — смена {start_time}-{end_time}"
+    
+    await callback.answer(
+        f"Выбрано: {date_str} — смена {start_time}-{end_time}", show_alert=True
     )
     await callback.message.edit_reply_markup(reply_markup=new_schedule())
 
