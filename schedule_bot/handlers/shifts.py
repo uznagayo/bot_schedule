@@ -24,7 +24,7 @@ async def this_week(callback: types.CallbackQuery):
     schedule = get_schedule(user_id, start_of_week)
 
     if not schedule:
-        await callback.message.answer("На этой неделе у тебя пока нет смен.")
+        await callback.answer("На этой неделе у тебя пока нет смен.", show_alert=True)
         return
 
     # message1 = "Твое расписание на текущую неделю:\n"
@@ -80,3 +80,18 @@ def new_schedule():
 
 
 # def shift_swap
+
+def new_schedule1():
+    __, next_week_names, __ = get_next_week_sheeets()
+    keybroad = InlineKeyboardMarkup(inline_keyboard=[])
+    days = []
+    for i in next_week_names:
+        day = ",".join(next_week_names[i].split(" ")[1])
+        if day not in days:
+            days.append(day)
+            button = InlineKeyboardButton(
+                text=day, callback_data=(f"new_shift_key,{day}")
+            )
+            keybroad.inline_keyboard.append([button])
+        else:
+            continue

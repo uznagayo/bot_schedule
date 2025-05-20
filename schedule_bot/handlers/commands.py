@@ -5,21 +5,22 @@ from utils.db import get_user_role
 def start(message: types.Message):
     role = get_user_role(message.from_user.id)
     user_id = message.from_user.id
-    keybroad = InlineKeyboardMarkup(inline_keyboard=[])
+    keybroad = InlineKeyboardMarkup(inline_keyboard=[], row_width=2)
     print(role)
-    buttons = []
-    if role == "employee":
-        buttons = [
+
+
+    buttons = [
             InlineKeyboardButton(text="По сменам", callback_data="new_schedule_key"),
             InlineKeyboardButton(text="Мое расписание", callback_data="my_schedule_key"),
         ]
 
-    if role == "ancient":
-        buttons = [
+    if role != "employee":
+        buttons.append(
             InlineKeyboardButton(text="Вызвать младшего", callback_data="emploee_summon_key"),
-            InlineKeyboardButton(text="Мое расписание", callback_data="my_schedule_key"),
+            )
+            # InlineKeyboardButton(text="Мое расписание", callback_data="my_schedule_key"),
            # InlineKeyboardButton(text="Расписание на сегодня", callback_data="today_schedule_key"),
-        ]
+        
     
     if user_id == 357434524:
         buttons.append(
@@ -27,5 +28,6 @@ def start(message: types.Message):
                 InlineKeyboardButton(text="Hash", callback_data="hash_key"),
             
         )
-    keybroad.inline_keyboard.append(buttons)
+    for i in range(0, len(buttons), 2):
+        keybroad.inline_keyboard.append(buttons[i:i + 2])
     return keybroad

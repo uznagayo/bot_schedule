@@ -5,7 +5,7 @@ import csv, os
 
 conn = sqlite3.connect(DB_PATH)
 cursor = conn.cursor()
-cursor.execute('SELECT full_name, role FROM users WHERE telegram_id = 1123135677')
+cursor.execute('SELECT * FROM shifts')
 print(cursor.fetchall())
 
 # cursor.execute(

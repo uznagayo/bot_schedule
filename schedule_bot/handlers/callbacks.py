@@ -52,13 +52,14 @@ async def my_schedule(callback: CallbackQuery):
 @callbacks_router.callback_query(lambda c: c.data == "new_schedule_key")
 async def send_shedule(callback: CallbackQuery):
     print(callback.from_user.first_name, "act_send_new_shedule")
-    user_role = get_user_role(callback.from_user.id)
-    if user_role == "ancient":
-        await callback.answer("Эта кнопка не тебе")
-        return
+    # user_role = get_user_role(callback.from_user.id)
+    # if user_role == "ancient":
+    #     await callback.answer("Эта кнопка не тебе")
+    #     return
 
     if not new_schedule():
-        await callback.message.answer("Свободных смен нету")
+        await callback.answer("Свободных смен нету", show_alert=True)
+        return
     else:
         await callback.message.edit_text("Сободные смены:")
         await callback.message.edit_reply_markup(reply_markup=new_schedule())
@@ -96,7 +97,8 @@ async def shift_key(callback: CallbackQuery):
             callback_data="my_schedule_key",
         ),
     ]
-    keybroad.inline_keyboard.append(buttuns)
+    for i in range(0, len(buttuns), 2):
+        keybroad.inline_keyboard.append(buttuns[i : i + 2])
     await callback.message.edit_text("Что сделать хочешь?")
     await callback.message.edit_reply_markup(reply_markup=keybroad)
 
