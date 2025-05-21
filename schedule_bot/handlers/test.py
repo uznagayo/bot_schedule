@@ -5,22 +5,22 @@ import csv, os
 
 conn = sqlite3.connect(DB_PATH)
 cursor = conn.cursor()
-cursor.execute('SELECT * FROM shifts')
-print(cursor.fetchall())
+# cursor.execute('SELECT * FROM shifts')
+# print(cursor.fetchall())
 
 # cursor.execute(
 #     "UPDATE users SET role = 'ancient' WHERE full_name = 'Левацкий Артём Юрьевич'"
 # )
 
 
-# for i in range(int(input())):
-#     cursor.execute(
-#         """
-#         INSERT OR REPLACE INTO users (telegram_id, full_name)
-#         VALUES (?, ?)
-#         """,
-#         (int(input()), input()),
-#     )
+for i in range(int(input())):
+    cursor.execute(
+        """
+        INSERT OR REPLACE INTO users (telegram_id, full_name)
+        VALUES (?, ?)
+        """,
+        (int(input()), input()),
+    )
 
 # data = "расписание 2025-04-01 2025-05-20"
 # _, start_str, end_str = data.split()

@@ -138,7 +138,8 @@ async def delete_shift(callback: CallbackQuery):
 
 @callbacks_router.callback_query(lambda c: c.data == "emploee_summon_key")
 async def emploee_summon_callback(callback: CallbackQuery):
-    await callback.answer("Вызов младшего")
+    await callback.answer("Вызов младшего пока не работает", show_alert=True)
+    return
 
     for id in get_telegram_ids("employee"):
         try:
