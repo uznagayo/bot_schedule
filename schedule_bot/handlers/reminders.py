@@ -31,6 +31,7 @@ async def select_schedule_rem(bot: Bot):
     for id in ids:
         try:
             await bot.send_message(chat_id=id, text='Пора выбрать смены, если еще не выбраны')
+            print('message send to', id)
         except Exception as e:
             await print(id, e)
     # print('trying')
