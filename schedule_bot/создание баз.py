@@ -1,24 +1,55 @@
 import sqlite3
 from handlers.config import DB_PATH
 from datetime import datetime, timedelta
+from utils.db import get_users_data
+
+# print(get_users_data())
 
 
+# conn = sqlite3.connect(DB_PATH)
+# cursor = conn.cursor()
+with sqlite3.connect(DB_PATH) as conn:
+    cursor = conn.cursor()
+    cursor.execute(
+                """
+                SELECT r.id, u2.full_name, s.date, s.actual_start, s.actual_end
+                FROM shift_exchange_requests r
+                JOIN users u2 ON r.sender_id = u2.id
+                JOIN schedule s ON r.shift_id = s.id
+                WHERE r.recipient_id = ? AND r.status = 'pending'
+                """,
+                (int(8),),
+            )
+    result = cursor.fetchall()
+print(result)
+# conn = sqlite3.connect(DB_PATH)
+# cursor = conn.cursor()
+# cursor.execute(
+#         """
+#             SELECT recipient_id, shift_id
+#             FROM shift_exchange_requests
+#             WHERE id = ?
+#             """,
+#         (2,),
+#     )
+# result = cursor.fetchall()
+# recipient_id, shift_id = result[0]
+# print(recipient_id, shift_id)
 
-conn = sqlite3.connect(DB_PATH)
-cursor = conn.cursor()
-
-cursor.execute(f'DELETE FROM users WHERE telegram_id = {262785085}')
+# cursor.execute(f'DELETE FROM shift_exchange_requests WHERE shift_id = {111}')
 
 # cursor.execute(
 #     """
-# CREATE TABLE IF NOT EXISTS ancient_schedule (
+# CREATE TABLE IF NOT EXISTS shift_exchange_requests (
 #    id INTEGER PRIMARY KEY AUTOINCREMENT,
-#    telegram_id INTEGER UNIQUE NOT NULL,
-#    full_name TEXT NOT NULL,
-#    day_night TEXT NOT NULL,
-#    user_id INTEGER NOT NULL,
-#    date TEXT NOT NULL,
-#    FOREIGN KEY(user_id) REFERENCES users(id)
+#    sender_id INTEGER NOT NULL,
+#    recipient_id INTEGER,
+#    shift_id INTEGER NOT NULL,
+#    status VARCHAR(20) CHECK(status IN('pending', 'accepted', 'declined', 'canceled')) DEFAULT 'pending',
+#    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+#    FOREIGN KEY(sender_id) REFERENCES users(id),
+#    FOREIGN KEY(recipient_id) REFERENCES users(id),
+#    FOREIGN KEY(shift_id) REFERENCES schedule(id)
 # )
 # """
 # )
@@ -44,10 +75,21 @@ cursor.execute(f'DELETE FROM users WHERE telegram_id = {262785085}')
 # FOREIGN KEY(shift_id) REFERENCES shifts(id)
 # )
 # """)
-print("done")
-conn.commit()
-conn.close()
+# print("done")
+# conn.commit()
+# conn.close()
 
+# with sqlite3.connect(DB_PATH) as conn:
+#         cursor = conn.cursor()
+#         cursor.execute(
+#             """
+#         SELECT id, full_name, telegram_id
+#         FROM users
+#         """,
+#         )
+#         result = cursor.fetchall()
+#         users_id, users_name, users_telegram_id = result[0]
+# print(users_id, users_name, users_telegram_id)
 # def get_next_week_sheeets():
 #    shift_ids = list(range(1, 14))
 #    next_monday = datetime.today() + timedelta(days=7 - datetime.today().weekday())

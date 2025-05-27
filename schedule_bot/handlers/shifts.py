@@ -7,17 +7,14 @@ from utils.db import (
     get_next_week_sheeets,
     get_user_role,
     get_shift_id_onday,
+    get_requests_id,
 )
 
 from .commands import start_true
 schedule_router = Router()
 
 
-# @schedule_router.message(F.text == "Мое расписание")
-# async def my_schedule(message: types.Message):
-#     print(message.from_user.first_name, 'act_send_my_shedule')
-#     await message.delete()
-#     await this_week(message)
+
 
 
 async def this_week(callback: types.CallbackQuery):
@@ -55,40 +52,68 @@ async def this_week(callback: types.CallbackQuery):
         ]
     )
 
-    await callback.message.edit_text(text="Твое расписание на текущую неделю")  # type: ignore
-    await callback.message.edit_reply_markup(reply_markup=keybroad)  # type: ignore
+    await callback.message.edit_text(text="Твое расписание на текущую неделю") 
+    await callback.message.edit_reply_markup(reply_markup=keybroad) 
 
 
-# @schedule_router.message(F.text == "По сменам")
-# async def send_shedule(message: types.Message):
-#     print(message.from_user.first_name, 'act_send_new_shedule')
-#     await new_schedule(message)
-#     await message.delete()
+async def get_income_requests(callback: types.CallbackQuery):
+    requests = get_requests_id(callback.from_user.id)
+    if not requests:
+        await callback.answer("Входящих запросов нет", show_alert=True)
+        await callback.message.edit_text("Главное меню")
+        await callback.message.edit_reply_markup(reply_markup=start_true(callback))
+        return
+    
+    keybroad = InlineKeyboardMarkup(inline_keyboard=[])
+    for id, name, date, start, end in requests:
+
+        button = InlineKeyboardButton(
+            text=f"{name} ({date}) - {start}–{end}",
+            callback_data=(f"income_request,{id}"),
+        )
+        keybroad.inline_keyboard.append([button])
+
+    keybroad.inline_keyboard.append(
+        [
+            InlineKeyboardButton(
+                text="Назад",
+                callback_data="shift_exchenge_requests_key",
+            )
+        ]
+    )
+
+    await callback.message.edit_text(text="Входящие запросы") 
+    await callback.message.edit_reply_markup(reply_markup=keybroad) 
 
 
-# def new_schedule():
+async def get_outcome_requests(callback: types.CallbackQuery):
+    requests = get_requests_id(callback.from_user.id, way = False)
+    if not requests:
+        await callback.answer("Исходящих запросов нет", show_alert=True)
+        await callback.message.edit_text("Главное меню")
+        await callback.message.edit_reply_markup(reply_markup=start_true(callback))
+        return
+    
+    keybroad = InlineKeyboardMarkup(inline_keyboard=[])
+    for id, name, date, start, end in requests:
 
-#     shift_id, days, times, dates = get_next_week_sheeets()
-#     keybroad = InlineKeyboardMarkup(inline_keyboard=[])
-#     for i in range(len(shift_id)):
+        button = InlineKeyboardButton(
+            text=f"{name} ({date}) - {start}–{end}",
+            callback_data=(f"outcome_request,{id}"),
+        )
+        keybroad.inline_keyboard.append([button])
 
-#         button = InlineKeyboardButton(
-#             text=days[i],
-#             callback_data=(f"new_shift_key,{dates[i]},{shift_id[i]},{times[i]}"),
-#         )
-#         keybroad.inline_keyboard.append([button])
-#     keybroad.inline_keyboard.append(
-#         [
-#             InlineKeyboardButton(
-#                 text="Назад",
-#                 callback_data="back_to_main_menu",
-#             )
-#         ]
-#     )
-#     return keybroad
+    keybroad.inline_keyboard.append(
+        [
+            InlineKeyboardButton(
+                text="Назад",
+                callback_data="shift_exchenge_requests_key",
+            )
+        ]
+    )
 
-
-# def shift_swap
+    await callback.message.edit_text(text="Исходящие запросы") 
+    await callback.message.edit_reply_markup(reply_markup=keybroad) 
 
 
 async def new_schedule_days(callback: types.CallbackQuery):
@@ -152,3 +177,5 @@ def new_schedule(shift_ids):
     for i in range(0, len(buttons), 2):
         keybroad.inline_keyboard.append(buttons[i : i + 2])
     return keybroad
+
+

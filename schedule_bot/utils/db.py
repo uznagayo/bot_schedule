@@ -27,6 +27,14 @@ def send_meme():
     return meme
 
 
+def get_user_name(telegram_id: int):
+    with sqlite3.connect(DB_PATH) as conn:
+        result = conn.execute(
+            "SELECT full_name FROM users WHERE telegram_id = ?", (telegram_id,)
+        ).fetchone()
+        return result[0] if result else None
+
+
 def get_user_id(telegram_id: int):
     with sqlite3.connect(DB_PATH) as conn:
         result = conn.execute(
@@ -52,17 +60,16 @@ def get_schedule(user_id, start_date: datetime):
         return cursor.fetchall()
 
 
-def get_users_name(user_id: int):
+def get_users_data():
     with sqlite3.connect(DB_PATH) as conn:
         cursor = conn.cursor()
         cursor.execute(
             """
-        SELECT full_name || ' ' || telegram_id
+        SELECT id, full_name, telegram_id
         FROM users
         """,
         )
-        users = [i[0] for i in cursor.fetchall() if user_id not in i]
-        return users
+        return cursor.fetchall()
 
 
 def get_next_week_sheeets():
@@ -160,3 +167,96 @@ def get_shift_id_onday(day: str):
         shift_ids = [i[0] for i in cursor.fetchall()]
         print(shift_ids)
         return shift_ids
+
+
+def create_shift_exchange_request(sender_id, recipient_id, shift_id):
+    conn = sqlite3.connect(DB_PATH)
+    cursor = conn.cursor()
+    cursor.execute(
+        """
+        INSERT OR REPLACE INTO shift_exchange_requests (sender_id, recipient_id, shift_id)
+        VALUES (?, ?, ?)
+        """,
+        (sender_id, recipient_id, shift_id),
+    )
+    conn.commit()
+    conn.close()
+    return
+
+
+def get_requests_id(telegram_id: int, way: bool = True):
+    user_id = get_user_id(telegram_id)
+    with sqlite3.connect(DB_PATH) as conn:
+        cursor = conn.cursor()
+        if way:
+
+            cursor.execute(
+                """
+                SELECT r.id, u2.full_name, s.date, s.actual_start, s.actual_end
+                FROM shift_exchange_requests r
+                JOIN users u2 ON r.sender_id = u2.id
+                JOIN schedule s ON r.shift_id = s.id
+                WHERE r.recipient_id = ? AND r.status = 'pending'
+                """,
+                (user_id,),
+            )
+            return cursor.fetchall()
+        else:
+            cursor.execute(
+                """
+                SELECT r.id, u2.full_name, s.date, s.actual_start, s.actual_end
+                FROM shift_exchange_requests r
+                JOIN users u2 ON r.recipient_id = u2.id
+                JOIN schedule s ON r.shift_id = s.id
+                WHERE r.sender_id = ? AND r.status = 'pending'
+                """,
+                (user_id,),
+            )
+            return cursor.fetchall()
+
+
+def shift_swap_accept(request_id):
+    conn = sqlite3.connect(DB_PATH)
+    cursor = conn.cursor()
+    cursor.execute(
+        """
+            SELECT recipient_id, shift_id
+            FROM shift_exchange_requests
+            WHERE id = ?
+            """,
+        (request_id,),
+    )
+    result = cursor.fetchall()
+    recipient_id, shift_id = result[0]
+
+    cursor.execute(
+        f"UPDATE schedule SET user_id = {recipient_id} WHERE id = {shift_id}"
+    )
+    cursor.execute(
+        f"UPDATE shift_exchange_requests SET status = 'accepted' WHERE id = {request_id}"
+    )
+    conn.commit()
+    conn.close()
+    return
+
+
+def shift_swap_decline(request_id):
+    conn = sqlite3.connect(DB_PATH)
+    cursor = conn.cursor()
+    cursor.execute(
+        f"UPDATE shift_exchange_requests SET status = 'declined' WHERE id = {request_id}"
+    )
+    conn.commit()
+    conn.close()
+    return
+
+
+def shift_swap_cancel(request_id):
+    conn = sqlite3.connect(DB_PATH)
+    cursor = conn.cursor()
+    cursor.execute(
+        f"UPDATE shift_exchange_requests SET status = 'canceled' WHERE id = {request_id}"
+    )
+    conn.commit()
+    conn.close()
+    return

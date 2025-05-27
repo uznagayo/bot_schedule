@@ -9,8 +9,19 @@ from utils.db import (
     delete_shift_not,
     get_telegram_ids,
     get_shift_id_onday,
+    get_users_data,
+    create_shift_exchange_request,
+    shift_swap_accept,
+    shift_swap_cancel,
+    shift_swap_decline,
 )
-from .shifts import new_schedule, this_week, new_schedule_days
+from .shifts import (
+    new_schedule,
+    this_week,
+    new_schedule_days,
+    get_income_requests,
+    get_outcome_requests,
+)
 from .commands import start_true
 
 
@@ -155,3 +166,173 @@ async def emploee_summon_callback(callback: CallbackQuery):
     print(
         text=f"{callback.from_user.first_name} вызвал младшего",
     )
+
+
+@callbacks_router.callback_query(lambda c: c.data.startswith("give_shift"))
+async def choosing_recipient(callback: CallbackQuery):
+
+    data = callback.data
+    _, shift_id = data.split(",")
+    with sqlite3.connect(DB_PATH) as conn:
+        cursor = conn.cursor()
+        cursor.execute(
+            """ 
+                   SELECT recipient_id, shift_id
+                   FROM shift_exchange_requests
+                   WHERE shift_id = ? AND status = 'pending'
+                   """,
+            (shift_id,),
+        )
+    if cursor.fetchall():
+        await callback.answer("Эта смена в процессе обмена", show_alert=True)
+        await this_week(callback)
+        return
+
+    user_id = get_user_id(callback.from_user.id)
+    # telegram_id_str = str(callback.from_user.id)
+    keybroad = InlineKeyboardMarkup(inline_keyboard=[])
+    buttons = []
+    users_data = get_users_data()
+    for users_id, users_name, users_telegram_id in users_data:
+        if users_telegram_id == user_id:
+            continue
+
+        buttons.append(
+            InlineKeyboardButton(
+                text=users_name,
+                callback_data=(f"to_user,{users_id},{users_telegram_id},{shift_id}"),
+            ),
+        )
+    buttons.append(
+        InlineKeyboardButton(
+            text="Назад",
+            callback_data=(f"my_schedule_key"),
+        ),
+    )
+    for i in range(0, len(buttons), 2):
+        keybroad.inline_keyboard.append(buttons[i : i + 2])
+
+    await callback.message.edit_text("Кому отдать?")
+    await callback.message.edit_reply_markup(reply_markup=keybroad)
+
+
+@callbacks_router.callback_query(lambda c: c.data.startswith("to_user"))
+async def give_shift(callback: CallbackQuery):
+    data = callback.data
+    user_id = get_user_id(callback.from_user.id)
+    __, recipient_id, recipient_telegram_id, shift_id = data.split(",")
+    create_shift_exchange_request(user_id, recipient_id, shift_id)
+    await callback.answer(
+        "Создан запрос на обмен сменой, жди подтверждения", show_alert=True
+    )
+    await callback.bot.send_message(
+        recipient_telegram_id, text="Тебе отправили новый запрос на обмен сменой"
+    )
+    await this_week(callback)
+
+
+@callbacks_router.callback_query(lambda c: c.data == ("shift_exchenge_requests_key"))
+async def get_shift_exchange_request(callback: CallbackQuery):
+    keybroad = InlineKeyboardMarkup(inline_keyboard=[])
+    buttons = [
+        InlineKeyboardButton(text="Входящие запросы", callback_data="requests_income"),
+        InlineKeyboardButton(
+            text="Исходящие запросы", callback_data="requests_outcome"
+        ),
+    ]
+    buttons.append(
+        InlineKeyboardButton(
+            text="Назад",
+            callback_data=(f"back_to_main_menu"),
+        ),
+    )
+    for i in range(0, len(buttons), 2):
+        keybroad.inline_keyboard.append(buttons[i : i + 2])
+
+    await callback.message.edit_text("Запросы")
+    await callback.message.edit_reply_markup(reply_markup=keybroad)
+
+
+@callbacks_router.callback_query(lambda c: c.data == ("requests_income"))
+async def get_income_shift_req(callback: CallbackQuery):
+    await get_income_requests(callback)
+
+
+@callbacks_router.callback_query(lambda c: c.data == ("requests_outcome"))
+async def get_outcome_shift_req(callback: CallbackQuery):
+    await get_outcome_requests(callback)
+
+
+@callbacks_router.callback_query(lambda c: c.data.startswith("income_request"))
+async def income_request(callback: CallbackQuery):
+    data = callback.data
+    (
+        __,
+        id,
+    ) = data.split(",")
+    keybroad = InlineKeyboardMarkup(inline_keyboard=[])
+    buttons = [
+        InlineKeyboardButton(text="Принять", callback_data=f"requests_accept,{id}"),
+        InlineKeyboardButton(text="Отклонить", callback_data=f"requests_decline,{id}"),
+        InlineKeyboardButton(text="Назад", callback_data="requests_outcome"),
+    ]
+    for i in range(0, len(buttons), 2):
+        keybroad.inline_keyboard.append(buttons[i : i + 2])
+
+    await callback.message.edit_text("Что сделать?")
+    await callback.message.edit_reply_markup(reply_markup=keybroad)
+
+
+@callbacks_router.callback_query(lambda c: c.data.startswith("outcome_request"))
+async def outcome_request(callback: CallbackQuery):
+    data = callback.data
+    (
+        __,
+        id,
+    ) = data.split(",")
+    keybroad = InlineKeyboardMarkup(inline_keyboard=[])
+    buttons = [
+        InlineKeyboardButton(text="Отменить", callback_data=f"requests_cancel,{id}"),
+        InlineKeyboardButton(text="Назад", callback_data="requests_outcome"),
+    ]
+    for i in range(0, len(buttons), 2):
+        keybroad.inline_keyboard.append(buttons[i : i + 2])
+
+    await callback.message.edit_text("Что сделать?")
+    await callback.message.edit_reply_markup(reply_markup=keybroad)
+
+
+@callbacks_router.callback_query(lambda c: c.data.startswith("requests_accept"))
+async def income_request_accept(callback: CallbackQuery):
+    data = callback.data
+    (
+        __,
+        id,
+    ) = data.split(",")
+    shift_swap_accept(id)
+    await callback.answer("Смена принята", show_alert=True)
+    await get_shift_exchange_request(callback)
+
+
+@callbacks_router.callback_query(lambda c: c.data.startswith("requests_decline"))
+async def income_request_decline(callback: CallbackQuery):
+    data = callback.data
+    (
+        __,
+        id,
+    ) = data.split(",")
+    shift_swap_decline(id)
+    await callback.answer("Как хош", show_alert=True)
+    await get_shift_exchange_request(callback)
+
+
+@callbacks_router.callback_query(lambda c: c.data.startswith("requests_cancel"))
+async def outcome_request_cancel(callback: CallbackQuery):
+    data = callback.data
+    (
+        __,
+        id,
+    ) = data.split(",")
+    shift_swap_cancel(id)
+    await callback.answer("Запрос отозван", show_alert=True)
+    await get_shift_exchange_request(callback)

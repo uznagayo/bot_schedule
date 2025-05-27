@@ -12,6 +12,7 @@ def start_true(message: types.Message):
     buttons = [
             InlineKeyboardButton(text="По сменам", callback_data="new_schedule_day_key"),
             InlineKeyboardButton(text="Мое расписание", callback_data="my_schedule_key"),
+            InlineKeyboardButton(text="Запросы на обмен", callback_data="shift_exchenge_requests_key"),
         ]
 
     if role != "employee":

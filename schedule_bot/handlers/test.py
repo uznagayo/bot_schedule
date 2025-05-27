@@ -1,17 +1,29 @@
 import sqlite3
 from config import DB_PATH
 import csv, os
+import utils.db
 
 
 conn = sqlite3.connect(DB_PATH)
 cursor = conn.cursor()
-cursor.execute('SELECT * FROM users')
-print(cursor.fetchall())
+# cursor.execute('SELECT * FROM users')
+# print(cursor.fetchall())
 
 # cursor.execute(
 #     "UPDATE users SET role = 'ancient' WHERE full_name = 'Левацкий Артём Юрьевич'"
 # )
 
+conn = sqlite3.connect(DB_PATH)
+cursor = conn.cursor()
+cursor.execute(
+        """
+            SELECT recipient_id, shift_id
+            FROM shift_exchange_requests
+            WHERE id = ?
+            """,
+        (2,),
+    )
+print(cursor.fetchall())
 
 # for i in range(int(input())):
 #     cursor.execute(
@@ -64,3 +76,5 @@ print(cursor.fetchall())
 print("done")
 conn.commit()
 conn.close()
+
+# print(utils.db.get_users_name(1))

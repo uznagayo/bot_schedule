@@ -1,28 +1,28 @@
 from aiogram import Router, F, types
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 from aiogram.filters import Command
-from utils.db import send_meme
+from utils.db import send_meme, get_user_name, get_schedule, get_user_id
 from .commands import start_true
+from datetime import datetime, timedelta
 
 start_router = Router()
 
 
 @start_router.message(Command("start"))
 async def start_command(message: types.Message):
-    # user_id = message.from_user.id
-    # keybroad = InlineKeyboardMarkup(inline_keyboard=[])
-    # buttons = [
-    #     InlineKeyboardButton(text="По сменам", callback_data="new_schedule_key"),
-    #     InlineKeyboardButton(text="Мое расписание", callback_data="my_schedule_key"),
-    # ]
-    # if user_id == 357434524:
-    #     buttons.append(
-    #         [
-    #             InlineKeyboardButton(text="Hash", callback_data="hash_key"),
-    #         ]
-    #     )
-    # keybroad.inline_keyboard.append(buttons)
-    await message.answer("Дарова епт", reply_markup=start_true(message))
+    today = datetime.today()
+    start_of_week = today - timedelta(days=today.weekday())
+    id = message.from_user.id
+    name, user_id = get_user_name(id), get_user_id(id)
+    schedule = get_schedule(user_id, start_of_week)
+    schedule_true = 'Твое расписание на неделю:\n'
+    if not schedule:
+        schedule_true = 'На этой неделе у тебя нет смен'
+    else:
+        for __, day, date, start, end in schedule:
+            schedule_true += f"{day} ({date}) - {start}–{end}\n"
+    hello = f'Привет {name}!\n{schedule_true}'
+    await message.answer(text=hello, reply_markup=start_true(message))
 
 
 @start_router.message(Command("send_meme"))
