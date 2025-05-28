@@ -45,6 +45,8 @@ nosetests.xml
 .dmypy.json
 dmypy.sock
 
+.vscode/
+
 .python-version
 
 # PyCharm
