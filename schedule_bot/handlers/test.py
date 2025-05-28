@@ -1,5 +1,6 @@
 import sqlite3
 from config import DB_PATH
+from loguru import logger
 # import csv, os
 # import utils.db
 
@@ -73,7 +74,7 @@ print(cursor.fetchall())
 
 # cursor.execute(f'DELETE FROM schedule WHERE user_id = {1}')
 
-print("done")
+logger.success("done")
 conn.commit()
 conn.close()
 

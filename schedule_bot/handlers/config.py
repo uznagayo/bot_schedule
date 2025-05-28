@@ -1,7 +1,11 @@
 import os
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 DB_PATH = os.path.join(os.path.dirname(__file__), '..', 'schedule.db')
 DB_PATH = os.path.abspath(DB_PATH)
 
-BOT_TOKEN = "7820867755:AAF7WBQ1BrWu-CYD58xa3UnRWLTE2zBlgkI"
+class Settings(BaseSettings):
+    model_config = SettingsConfigDict(env_file='.env', env_file_encoding='utf-8', extra='ignore')
+    bot_token: str
 
+settings = Settings()

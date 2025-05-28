@@ -1,23 +1,26 @@
 import asyncio
 from aiogram import Bot, Dispatcher
 from handlers import all_routers
-from handlers.config import BOT_TOKEN
+from handlers.config import settings
 from filters import IsRegisteredMiddleware
 from handlers.reminders import reminders
+from loguru import logger
 
 
 async def main():
-    bot = Bot(token=BOT_TOKEN)
+    bot = Bot(token=settings.bot_token)
     dp = Dispatcher()
 
     dp.message.middleware(IsRegisteredMiddleware())
     dp.callback_query.middleware(IsRegisteredMiddleware())
     
     try:
+
         asyncio.create_task(reminders(bot))
-        print('done')
+        logger.success('done\n')
+    
     except Exception as e:
-        print('not done', e)
+        logger.error('not done\n', e)
 
 
 
