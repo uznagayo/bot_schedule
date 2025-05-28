@@ -29,6 +29,9 @@ class SwapRequestHandler(CallbackData, prefix="swap"):
     action: str
     request_id: int
 
+class WeekScheduleHandler(CallbackData, prefix="week"):
+    week: bool
+
 
 @callbacks_router.callback_query(lambda c: c.data.startswith("new_shift_day_key"))
 async def new_shift_day_key(callback: CallbackQuery):
@@ -312,10 +315,28 @@ async def outcome_request(callback: CallbackQuery):
     await callback.message.edit_text("Что сделать?")
     await callback.message.edit_reply_markup(reply_markup=keybroad)
 
-
 @callbacks_router.callback_query(lambda c: c.data == "schedule_week_key")
-async def week_schedule(callback: CallbackQuery):
-    result = get_all_schedule(True)
+async def week_schedule_choose(callback: CallbackQuery):
+    keybroad = InlineKeyboardMarkup(inline_keyboard=[])
+    buttons = [
+        
+        InlineKeyboardButton(text="Эта", callback_data=WeekScheduleHandler(week=True).pack(),),
+        InlineKeyboardButton(text="Следующая", callback_data=WeekScheduleHandler(week=False).pack(),),
+        InlineKeyboardButton(text="Назад", callback_data="back_to_main_menu"),
+        
+    ]
+    for i in range(0, len(buttons), 2):
+        keybroad.inline_keyboard.append(buttons[i:i + 2])
+
+
+    await callback.message.edit_text("Выбери неделю")
+    await callback.message.edit_reply_markup(reply_markup=keybroad)
+
+
+@callbacks_router.callback_query(WeekScheduleHandler.filter())
+async def week_schedule(callback: CallbackQuery, callback_data: WeekScheduleHandler):
+    week = callback_data.week
+    result = get_all_schedule(week)
     keybroad = InlineKeyboardMarkup(inline_keyboard=[])
     for day, start, end, name in result:
         button = InlineKeyboardButton(
@@ -326,11 +347,11 @@ async def week_schedule(callback: CallbackQuery):
         [
             InlineKeyboardButton(
                 text="Назад",
-                callback_data="back_to_main_menu",
+                callback_data="schedule_week_key",
             )
         ]
     )
-    await callback.message.edit_text("Расписание этой недели")
+    await callback.message.edit_text("Расписание выбранной недели")
     await callback.message.edit_reply_markup(reply_markup=keybroad)
 
 
