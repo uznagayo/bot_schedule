@@ -60,6 +60,55 @@ def get_schedule(user_id, start_date: datetime):
         return cursor.fetchall()
 
 
+def get_all_schedule(week: bool):
+    start_of_week = datetime.today() - timedelta(days=datetime.today().weekday())
+    
+    if week:
+            end_of_week = start_of_week + timedelta(days=6)
+            with sqlite3.connect(DB_PATH) as conn:
+                cursor = conn.cursor()
+                cursor.execute(
+                """
+                SELECT day_of_week, actual_start, actual_end, users.full_name
+                FROM shifts
+                JOIN schedule ON schedule.shift_id = shifts.id
+                JOIN users ON users.id = schedule.user_id
+                WHERE date BETWEEN ? AND ?
+                """,
+                    (start_of_week.strftime("%Y-%m-%d"), end_of_week.strftime("%Y-%m-%d")),
+                )
+                return cursor.fetchall()
+    else:
+        start_of_week += timedelta(days=7)
+        end_of_week = start_of_week + timedelta(days=6)
+        with sqlite3.connect(DB_PATH) as conn:
+                cursor = conn.cursor()
+                cursor.execute(
+                """
+                SELECT day_of_week, actual_start, actual_end, users.full_name
+                FROM shifts
+                JOIN schedule ON schedule.shift_id = shifts.id
+                JOIN users ON users.id = schedule.user_id
+                WHERE date BETWEEN ? AND ?
+                """,
+                    (start_of_week.strftime("%Y-%m-%d"), end_of_week.strftime("%Y-%m-%d")),
+                )
+                return cursor.fetchall()
+
+def get_onday_admins(day: datetime):
+    with sqlite3.connect(DB_PATH) as conn:
+        cursor = conn.cursor()
+        cursor.execute(
+            """
+            SELECT full_name, telegram_id
+            FROM users
+            JOIN schedule ON schedule.user_id = users.id
+            WHERE date = ?
+            """,
+                (day.strftime("%Y-%m-%d"),),
+        )
+        return cursor.fetchall
+
 def get_users_data():
     with sqlite3.connect(DB_PATH) as conn:
         cursor = conn.cursor()
@@ -215,48 +264,40 @@ def get_requests_id(telegram_id: int, way: bool = True):
             return cursor.fetchall()
 
 
-def shift_swap_accept(request_id):
-    conn = sqlite3.connect(DB_PATH)
-    cursor = conn.cursor()
-    cursor.execute(
-        """
-            SELECT recipient_id, shift_id
-            FROM shift_exchange_requests
-            WHERE id = ?
-            """,
-        (request_id,),
-    )
-    result = cursor.fetchall()
-    recipient_id, shift_id = result[0]
-
-    cursor.execute(
-        f"UPDATE schedule SET user_id = {recipient_id} WHERE id = {shift_id}"
-    )
-    cursor.execute(
-        f"UPDATE shift_exchange_requests SET status = 'accepted' WHERE id = {request_id}"
-    )
-    conn.commit()
-    conn.close()
-    return
 
 
-def shift_swap_decline(request_id):
-    conn = sqlite3.connect(DB_PATH)
-    cursor = conn.cursor()
-    cursor.execute(
-        f"UPDATE shift_exchange_requests SET status = 'declined' WHERE id = {request_id}"
-    )
-    conn.commit()
-    conn.close()
-    return
+def shift_swap_handler(request_id, action):
+    with sqlite3.connect(DB_PATH) as conn:
+        cursor = conn.cursor()
+        if action == 'accepted':
+            cursor.execute(
+            """
+                SELECT recipient_id, shift_id
+                FROM shift_exchange_requests
+                WHERE id = ?
+                """,
+            (request_id,),
+            )
+            result = cursor.fetchall()
+            recipient_id, shift_id = result[0]
 
+            cursor.execute(
+            f"UPDATE schedule SET user_id = {recipient_id} WHERE id = {shift_id}"
+            )
+            cursor.execute(
+            f"UPDATE shift_exchange_requests SET status = 'accepted' WHERE id = {request_id}"
+            )
+            return ("Смена принята")
 
-def shift_swap_cancel(request_id):
-    conn = sqlite3.connect(DB_PATH)
-    cursor = conn.cursor()
-    cursor.execute(
-        f"UPDATE shift_exchange_requests SET status = 'canceled' WHERE id = {request_id}"
-    )
-    conn.commit()
-    conn.close()
-    return
+        elif action == 'declined':
+            cursor.execute(
+            f"UPDATE shift_exchange_requests SET status = 'declined' WHERE id = {request_id}"
+            )
+            return ("Как хош")
+
+        elif action == 'canceled':
+            cursor.execute(
+            f"UPDATE shift_exchange_requests SET status = 'canceled' WHERE id = {request_id}"
+            )
+            return ("Запрос отозван")
+

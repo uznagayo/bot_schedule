@@ -1,19 +1,16 @@
-from aiogram import Router, types, Bot
+from aiogram import Router
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton, CallbackQuery
-import sqlite3, csv, os
+import sqlite3
 from .config import DB_PATH
 from utils.db import (
     get_user_id,
-    get_next_week_sheeets,
-    get_user_role,
     delete_shift_not,
     get_telegram_ids,
     get_shift_id_onday,
     get_users_data,
     create_shift_exchange_request,
-    shift_swap_accept,
-    shift_swap_cancel,
-    shift_swap_decline,
+    shift_swap_handler,
+    get_all_schedule,
 )
 from .shifts import (
     new_schedule,
@@ -23,9 +20,14 @@ from .shifts import (
     get_outcome_requests,
 )
 from .commands import start_true
-
+from aiogram.filters.callback_data import CallbackData
 
 callbacks_router = Router()
+
+
+class SwapRequestHandler(CallbackData, prefix="swap"):
+    action: str
+    request_id: int
 
 
 @callbacks_router.callback_query(lambda c: c.data.startswith("new_shift_day_key"))
@@ -206,7 +208,7 @@ async def choosing_recipient(callback: CallbackQuery):
     buttons.append(
         InlineKeyboardButton(
             text="Назад",
-            callback_data=(f"my_schedule_key"),
+            callback_data=("my_schedule_key"),
         ),
     )
     for i in range(0, len(buttons), 2):
@@ -243,7 +245,7 @@ async def get_shift_exchange_request(callback: CallbackQuery):
     buttons.append(
         InlineKeyboardButton(
             text="Назад",
-            callback_data=(f"back_to_main_menu"),
+            callback_data=("back_to_main_menu"),
         ),
     )
     for i in range(0, len(buttons), 2):
@@ -272,8 +274,14 @@ async def income_request(callback: CallbackQuery):
     ) = data.split(",")
     keybroad = InlineKeyboardMarkup(inline_keyboard=[])
     buttons = [
-        InlineKeyboardButton(text="Принять", callback_data=f"requests_accept,{id}"),
-        InlineKeyboardButton(text="Отклонить", callback_data=f"requests_decline,{id}"),
+        InlineKeyboardButton(
+            text="Принять",
+            callback_data=SwapRequestHandler(action="accepted", request_id=id).pack(),
+        ),
+        InlineKeyboardButton(
+            text="Отклонить",
+            callback_data=SwapRequestHandler(action="declined", request_id=id).pack(),
+        ),
         InlineKeyboardButton(text="Назад", callback_data="requests_outcome"),
     ]
     for i in range(0, len(buttons), 2):
@@ -292,7 +300,10 @@ async def outcome_request(callback: CallbackQuery):
     ) = data.split(",")
     keybroad = InlineKeyboardMarkup(inline_keyboard=[])
     buttons = [
-        InlineKeyboardButton(text="Отменить", callback_data=f"requests_cancel,{id}"),
+        InlineKeyboardButton(
+            text="Отменить",
+            callback_data=SwapRequestHandler(action="canceled", request_id=id).pack(),
+        ),
         InlineKeyboardButton(text="Назад", callback_data="requests_outcome"),
     ]
     for i in range(0, len(buttons), 2):
@@ -302,37 +313,31 @@ async def outcome_request(callback: CallbackQuery):
     await callback.message.edit_reply_markup(reply_markup=keybroad)
 
 
-@callbacks_router.callback_query(lambda c: c.data.startswith("requests_accept"))
-async def income_request_accept(callback: CallbackQuery):
-    data = callback.data
-    (
-        __,
-        id,
-    ) = data.split(",")
-    shift_swap_accept(id)
-    await callback.answer("Смена принята", show_alert=True)
-    await get_shift_exchange_request(callback)
+@callbacks_router.callback_query(lambda c: c.data == "schedule_week_key")
+async def week_schedule(callback: CallbackQuery):
+    result = get_all_schedule(True)
+    keybroad = InlineKeyboardMarkup(inline_keyboard=[])
+    for day, start, end, name in result:
+        button = InlineKeyboardButton(
+            text=(f"{day}: {name} {start}--{end}"), callback_data="kek"
+        )
+        keybroad.inline_keyboard.append([button])
+    keybroad.inline_keyboard.append(
+        [
+            InlineKeyboardButton(
+                text="Назад",
+                callback_data="back_to_main_menu",
+            )
+        ]
+    )
+    await callback.message.edit_text("Расписание этой недели")
+    await callback.message.edit_reply_markup(reply_markup=keybroad)
 
 
-@callbacks_router.callback_query(lambda c: c.data.startswith("requests_decline"))
-async def income_request_decline(callback: CallbackQuery):
-    data = callback.data
-    (
-        __,
-        id,
-    ) = data.split(",")
-    shift_swap_decline(id)
-    await callback.answer("Как хош", show_alert=True)
-    await get_shift_exchange_request(callback)
-
-
-@callbacks_router.callback_query(lambda c: c.data.startswith("requests_cancel"))
-async def outcome_request_cancel(callback: CallbackQuery):
-    data = callback.data
-    (
-        __,
-        id,
-    ) = data.split(",")
-    shift_swap_cancel(id)
-    await callback.answer("Запрос отозван", show_alert=True)
+@callbacks_router.callback_query(SwapRequestHandler.filter())
+async def swap_hanlder(callback: CallbackQuery, callback_data: SwapRequestHandler):
+    action = callback_data.action
+    request_id = callback_data.request_id
+    text = shift_swap_handler(request_id, action)
+    await callback.answer(text=text, show_alert=True)
     await get_shift_exchange_request(callback)

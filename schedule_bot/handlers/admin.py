@@ -1,5 +1,7 @@
-from aiogram import Router, F, types
-import sqlite3, csv, os
+from aiogram import Router, types
+import sqlite3
+import csv
+import os
 from .config import DB_PATH
 
 

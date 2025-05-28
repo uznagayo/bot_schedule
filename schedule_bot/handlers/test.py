@@ -1,7 +1,7 @@
 import sqlite3
 from config import DB_PATH
-import csv, os
-import utils.db
+# import csv, os
+# import utils.db
 
 
 conn = sqlite3.connect(DB_PATH)

@@ -1,5 +1,4 @@
-from aiogram import Router, F, types
-from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
+from aiogram import Router, types
 from aiogram.filters import Command
 from utils.db import send_meme, get_user_name, get_schedule, get_user_id
 from .commands import start_true
@@ -28,5 +27,5 @@ async def start_command(message: types.Message):
 @start_router.message(Command("send_meme"))
 async def send_meme_handler(message: types.Message):
     meme = send_meme()
-    print(message.from_user.first_name, "заказал мем") # type: ignore
+    print(message.from_user.first_name, "заказал мем")
     await message.answer_photo(photo=meme, caption="Вот тебе мем, епт")

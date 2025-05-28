@@ -1,6 +1,5 @@
-from datetime import datetime, timedelta
-import aiogram
-from aiogram import types, Router, F, Bot
+from datetime import datetime
+from aiogram import Router, Bot
 import asyncio
 from utils.db import get_telegram_ids
 
@@ -21,7 +20,7 @@ async def reminders(bot: Bot):
         today = datetime.now()
         # print(today)
         # print(today.weekday(), today.hour, today.minute)
-        today_str = today.strftime("%Y-%m-%d")
+        today.strftime("%Y-%m-%d")
         if today.weekday() == 4 and today.hour == 16 and today.minute == 30:
             await select_schedule_rem(bot)
 
@@ -38,10 +37,8 @@ async def select_schedule_rem(bot: Bot):
             print("message send to", id)
         except Exception as e:
             await print(id, e)
-    # print('trying')
 
-    # try:
-    #     await bot.send_message(chat_id=357434524, text='Пора выбрать смены, если еще не выбраны')
 
-    # except Exception as e:
-    #     print(e)
+async def sheet_rem(bot: Bot):
+    pass
+

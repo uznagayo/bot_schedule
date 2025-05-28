@@ -1,4 +1,4 @@
-from aiogram import Router, F, types
+from aiogram import types
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 from utils.db import get_user_role
 
@@ -11,8 +11,9 @@ def start_true(message: types.Message):
 
     buttons = [
             InlineKeyboardButton(text="По сменам", callback_data="new_schedule_day_key"),
-            InlineKeyboardButton(text="Мое расписание", callback_data="my_schedule_key"),
+            InlineKeyboardButton(text="Мои смены", callback_data="my_schedule_key"),
             InlineKeyboardButton(text="Запросы на обмен", callback_data="shift_exchenge_requests_key"),
+            InlineKeyboardButton(text="Расписание на неделю", callback_data="schedule_week_key"),
         ]
 
     if role != "employee":
@@ -20,7 +21,7 @@ def start_true(message: types.Message):
             InlineKeyboardButton(text="Вызвать младшего", callback_data="emploee_summon_key"),
             )
             # InlineKeyboardButton(text="Мое расписание", callback_data="my_schedule_key"),
-           # InlineKeyboardButton(text="Расписание на сегодня", callback_data="today_schedule_key"),
+            # InlineKeyboardButton(text="Расписание на сегодня", callback_data="today_schedule_key"),
         
     
     if user_id == 357434524:

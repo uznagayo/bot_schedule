@@ -1,26 +1,38 @@
 import sqlite3
 from handlers.config import DB_PATH
-from datetime import datetime, timedelta
-from utils.db import get_users_data
 
 # print(get_users_data())
 
 
 # conn = sqlite3.connect(DB_PATH)
 # cursor = conn.cursor()
+# with sqlite3.connect(DB_PATH) as conn:
+#     cursor = conn.cursor()
+#     cursor.execute(
+#                 """
+#                 SELECT r.id, u2.full_name, s.date, s.actual_start, s.actual_end
+#                 FROM shift_exchange_requests r
+#                 JOIN users u2 ON r.sender_id = u2.id
+#                 JOIN schedule s ON r.shift_id = s.id
+#                 WHERE r.recipient_id = ? AND r.status = 'pending'
+#                 """,
+#                 (int(8),),
+#             )
+#     result = cursor.fetchall()
 with sqlite3.connect(DB_PATH) as conn:
     cursor = conn.cursor()
     cursor.execute(
                 """
-                SELECT r.id, u2.full_name, s.date, s.actual_start, s.actual_end
-                FROM shift_exchange_requests r
-                JOIN users u2 ON r.sender_id = u2.id
-                JOIN schedule s ON r.shift_id = s.id
-                WHERE r.recipient_id = ? AND r.status = 'pending'
+                SELECT day_of_week, actual_start, actual_end, users.full_name
+                FROM shifts
+                JOIN schedule ON schedule.shift_id = shifts.id
+                JOIN users ON users.id = schedule.user_id
+                WHERE date BETWEEN ? AND ?
                 """,
-                (int(8),),
-            )
+                    ('2025-05-27', '2025-06-01'),
+                )
     result = cursor.fetchall()
+
 print(result)
 # conn = sqlite3.connect(DB_PATH)
 # cursor = conn.cursor()

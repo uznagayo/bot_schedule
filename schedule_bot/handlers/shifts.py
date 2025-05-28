@@ -1,12 +1,10 @@
-from aiogram import Router, F, types
+from aiogram import Router, types
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 from datetime import datetime, timedelta
 from utils.db import (
     get_user_id,
     get_schedule,
     get_next_week_sheeets,
-    get_user_role,
-    get_shift_id_onday,
     get_requests_id,
 )
 
@@ -20,7 +18,7 @@ schedule_router = Router()
 async def this_week(callback: types.CallbackQuery):
     user_id = get_user_id(callback.from_user.id)
     if not user_id:
-        await callback.message.answer("Ты ещё не зарегистрирован в системе.")  # type: ignore
+        await callback.message.answer("Ты ещё не зарегистрирован в системе.")  
         return
 
     today = datetime.today()
@@ -170,7 +168,7 @@ def new_schedule(shift_ids):
     buttons.append(
         InlineKeyboardButton(
             text="Назад",
-            callback_data=(f"new_schedule_day_key"),
+            callback_data=("new_schedule_day_key"),
         ),
     )
 

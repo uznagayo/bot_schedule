@@ -1,7 +1,6 @@
 from aiogram import Bot, Dispatcher, executor, types
 from datetime import datetime, timedelta
 from aiogram.types import (
-    CallbackQuery,
     InlineKeyboardMarkup,
     InlineKeyboardButton,
     ReplyKeyboardMarkup,
@@ -240,7 +239,7 @@ async def send_schedule_file(message: types.Message):
         await message.answer_document(types.InputFile(file_path))
         os.remove(file_path)
 
-    except Exception as e:
+    except Exception:
         await message.answer(
             "Неверный формат. Введите: расписание ГГГГ-ММ-ДД ГГГГ-ММ-ДД"
         )
