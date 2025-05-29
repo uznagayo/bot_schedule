@@ -4,6 +4,7 @@ from datetime import datetime, timedelta
 import json
 from random import choice
 
+MEMES = "memes.json"
 
 def get_user_role(telegram_id: int):
     with sqlite3.connect(DB_PATH) as conn:
@@ -19,9 +20,29 @@ def get_user_role(telegram_id: int):
         result = cursor.fetchone()
         return result[0] if result else None
 
+def save_mem_id(file_id):
+    data = []
+
+
+    try:
+        with open(MEMES, "r", encoding="utf-8") as f:
+            data = json.load(f)
+    except (FileNotFoundError, json.JSONDecodeError):
+        data = []
+
+    if file_id not in data:
+        data.append(file_id)
+
+        with open(MEMES, "w", encoding="utf-8") as f:
+            json.dump(data, f, ensure_ascii=False, indent=2)
+
+        print(f"✅ Добавлен: {file_id}")
+    else:
+        print(f"ℹ️ Уже есть: {file_id}")
+
 
 def send_meme():
-    with open("memes.json", "r", encoding="utf-8") as file:
+    with open(MEMES, "r", encoding="utf-8") as file:
         memes = json.load(file)
     meme = choice(memes)
     return meme

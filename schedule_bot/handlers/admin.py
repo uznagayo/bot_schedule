@@ -1,9 +1,11 @@
-from aiogram import Router, types
+from aiogram import Router, types, F
+from aiogram.types import Message
 import sqlite3
 import csv
 import os
 from .config import DB_PATH
 from loguru import logger
+from utils.db import save_mem_id
 
 
 admin_router = Router()
@@ -64,3 +66,11 @@ async def send_schedule_file(message: types.Message):
         await message.answer(
             "Неверный формат. Введите: расписание ГГГГ-ММ-ДД ГГГГ-ММ-ДД"
         )
+
+
+@admin_router.channel_post(F.photo)
+async def mem_catcher_handler(message: Message):
+    file_id = message.photo[-1].file_id
+    save_mem_id(file_id)
+    print('Сохранено фото')
+
