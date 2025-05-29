@@ -14,26 +14,26 @@ cursor = conn.cursor()
 #     "UPDATE users SET role = 'ancient' WHERE full_name = 'Левацкий Артём Юрьевич'"
 # )
 
-conn = sqlite3.connect(DB_PATH)
-cursor = conn.cursor()
-cursor.execute(
-        """
-            SELECT recipient_id, shift_id
-            FROM shift_exchange_requests
-            WHERE id = ?
-            """,
-        (2,),
-    )
-print(cursor.fetchall())
-
-# for i in range(int(input())):
-#     cursor.execute(
+# conn = sqlite3.connect(DB_PATH)
+# cursor = conn.cursor()
+# cursor.execute(
 #         """
-#         INSERT OR REPLACE INTO users (telegram_id, full_name)
-#         VALUES (?, ?)
-#         """,
-#         (int(input()), input()),
+#             SELECT recipient_id, shift_id
+#             FROM shift_exchange_requests
+#             WHERE id = ?
+#             """,
+#         (2,),
 #     )
+# print(cursor.fetchall())
+
+for i in range(int(input())):
+    cursor.execute(
+        """
+        INSERT OR REPLACE INTO schedule (user_id, date, shift_id,)
+        VALUES (?, ?)
+        """,
+        (int(input()), input()),
+    )
 
 # data = "расписание 2025-04-01 2025-05-20"
 # _, start_str, end_str = data.split()

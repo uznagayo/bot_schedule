@@ -1,7 +1,8 @@
 import sqlite3
 from handlers.config import DB_PATH
+from loguru import logger
 
-# print(get_users_data())
+
 
 
 # conn = sqlite3.connect(DB_PATH)
@@ -33,7 +34,7 @@ with sqlite3.connect(DB_PATH) as conn:
                 )
     result = cursor.fetchall()
 
-print(result)
+logger.success(result)
 # conn = sqlite3.connect(DB_PATH)
 # cursor = conn.cursor()
 # cursor.execute(

@@ -21,6 +21,7 @@ from .shifts import (
 )
 from .commands import start_true
 from aiogram.filters.callback_data import CallbackData
+from loguru import logger
 
 callbacks_router = Router()
 
@@ -53,14 +54,7 @@ async def new_shift_key(callback: CallbackQuery):
     data = callback.data
 
     _, date_str, shift_id, start_time, end_time = data.split(",")
-    print(
-        callback.from_user.first_name,
-        "choose",
-        date_str,
-        shift_id,
-        start_time,
-        end_time,
-    )
+    logger.info(f"{callback.from_user.first_name} choose {date_str} {shift_id} {start_time} {end_time}")
     with sqlite3.connect(DB_PATH) as conn:
         conn.execute(
             """
@@ -79,13 +73,13 @@ async def new_shift_key(callback: CallbackQuery):
 
 @callbacks_router.callback_query(lambda c: c.data == "my_schedule_key")
 async def my_schedule(callback: CallbackQuery):
-    print(callback.from_user.first_name, "act_send_my_shedule")
+    logger.info(f"{callback.from_user.first_name} act_send_my_shedule")
     await this_week(callback)
 
 
 @callbacks_router.callback_query(lambda c: c.data.startswith("new_schedule_day_key"))
 async def send_shedule(callback: CallbackQuery):
-    print(callback.from_user.first_name, "act_send_new_shedule")
+    logger.info(f"{callback.from_user.first_name} act_send_new_shedule")
     # user_role = get_user_role(callback.from_user.id)
     # if user_role == "ancient":
     #     await callback.answer("Эта кнопка не тебе")
@@ -148,7 +142,7 @@ async def delete_shift(callback: CallbackQuery):
             chat_id=357434524, text=f"{callback.from_user.first_name} удалил смену {id}"
         )
     except Exception as e:
-        print(e)
+        logger.exception(e)
         await callback.answer("Ошибка удаления смены. Попробуй позже.")
 
 
@@ -163,12 +157,12 @@ async def emploee_summon_callback(callback: CallbackQuery):
                 chat_id=id,
                 text=f"{callback.from_user.first_name} вызвал младшего на сегодня, с любого времени",
             )
-            print(f"Message sent to {id}")
+            logger.info(f"Message sent to {id}")
         except Exception as e:
-            print(f"Failed to send message to {id}: {e}")
+            logger.exception(f"Failed to send message to {id}: {e}")
             await callback.answer("Ошибка вызова младшего. Попробуй позже.")
 
-    print(
+    logger.info(
         text=f"{callback.from_user.first_name} вызвал младшего",
     )
 

@@ -3,6 +3,7 @@ import sqlite3
 import csv
 import os
 from .config import DB_PATH
+from loguru import logger
 
 
 admin_router = Router()
@@ -59,7 +60,7 @@ async def send_schedule_file(message: types.Message):
 
 
     except Exception as e:
-        print(e)
+        logger.exception(e)
         await message.answer(
             "Неверный формат. Введите: расписание ГГГГ-ММ-ДД ГГГГ-ММ-ДД"
         )

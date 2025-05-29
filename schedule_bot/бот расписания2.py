@@ -9,6 +9,7 @@ from aiogram.types import (
 import sqlite3
 import os
 import csv
+from loguru import logger
 
 DB_PATH = "schedule.db"
 
@@ -58,7 +59,7 @@ def get_next_week_sheeets():
                 dates.pop(shift_ids.index(i))
                 shift_ids.remove(i)
 
-        print(shifts_name, num, next_monday, next_sunday)
+        logger.info(shifts_name, num, next_monday, next_sunday)
     return shift_ids, shifts_name, dates
 
 

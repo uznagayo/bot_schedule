@@ -6,7 +6,7 @@ def start_true(message: types.Message):
     role = get_user_role(message.from_user.id)
     user_id = message.from_user.id
     keybroad = InlineKeyboardMarkup(inline_keyboard=[])
-    print(role)
+    
 
 
     buttons = [

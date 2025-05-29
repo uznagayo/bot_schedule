@@ -74,6 +74,7 @@ def get_all_schedule(week: bool):
                 JOIN schedule ON schedule.shift_id = shifts.id
                 JOIN users ON users.id = schedule.user_id
                 WHERE date BETWEEN ? AND ?
+                ORDER BY date
                 """,
                     (start_of_week.strftime("%Y-%m-%d"), end_of_week.strftime("%Y-%m-%d")),
                 )
@@ -90,6 +91,7 @@ def get_all_schedule(week: bool):
                 JOIN schedule ON schedule.shift_id = shifts.id
                 JOIN users ON users.id = schedule.user_id
                 WHERE date BETWEEN ? AND ?
+                ORDER BY date
                 """,
                     (start_of_week.strftime("%Y-%m-%d"), end_of_week.strftime("%Y-%m-%d")),
                 )
@@ -214,7 +216,6 @@ def get_shift_id_onday(day: str):
             (day,),
         )
         shift_ids = [i[0] for i in cursor.fetchall()]
-        print(shift_ids)
         return shift_ids
 
 

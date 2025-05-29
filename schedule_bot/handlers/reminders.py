@@ -2,6 +2,7 @@ from datetime import datetime
 from aiogram import Router, Bot
 import asyncio
 from utils.db import get_telegram_ids
+from loguru import logger
 
 reminders_router = Router()
 
@@ -34,9 +35,9 @@ async def select_schedule_rem(bot: Bot):
             await bot.send_message(
                 chat_id=id, text="Пора выбрать смены, если еще не выбраны"
             )
-            print("message send to", id)
+            logger.info(f"message send to {id}")
         except Exception as e:
-            await print(id, e)
+            await logger.exception(id, e)
 
 
 async def sheet_rem(bot: Bot):
