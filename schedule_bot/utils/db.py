@@ -21,7 +21,7 @@ def get_user_role(telegram_id: int):
 
 
 def send_meme():
-    with open("schedule_bot/memes.json", "r", encoding="utf-8") as file:
+    with open("memes.json", "r", encoding="utf-8") as file:
         memes = json.load(file)
     meme = choice(memes)
     return meme
