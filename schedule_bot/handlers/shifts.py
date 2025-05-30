@@ -121,6 +121,8 @@ async def new_schedule_days(callback: types.CallbackQuery):
     buttons = []
     for i in range(len(days)):
         day = days[i]
+        if day == "Внеочередная":
+            continue
         if day not in days_ctrl:
             days_ctrl.append(day)
             buttons.append(

@@ -20,21 +20,21 @@ from loguru import logger
 #                 (int(8),),
 #             )
 #     result = cursor.fetchall()
-with sqlite3.connect(DB_PATH) as conn:
-    cursor = conn.cursor()
-    cursor.execute(
-                """
-                SELECT day_of_week, actual_start, actual_end, users.full_name
-                FROM shifts
-                JOIN schedule ON schedule.shift_id = shifts.id
-                JOIN users ON users.id = schedule.user_id
-                WHERE date BETWEEN ? AND ?
-                """,
-                    ('2025-05-27', '2025-06-01'),
-                )
-    result = cursor.fetchall()
+# with sqlite3.connect(DB_PATH) as conn:
+#     cursor = conn.cursor()
+#     cursor.execute(
+#                 """
+#                 SELECT day_of_week, actual_start, actual_end, users.full_name
+#                 FROM shifts
+#                 JOIN schedule ON schedule.shift_id = shifts.id
+#                 JOIN users ON users.id = schedule.user_id
+#                 WHERE date BETWEEN ? AND ?
+#                 """,
+#                     ('2025-05-27', '2025-06-01'),
+#                 )
+#     result = cursor.fetchall()
 
-logger.success(result)
+# logger.success(result)
 # conn = sqlite3.connect(DB_PATH)
 # cursor = conn.cursor()
 # cursor.execute(
@@ -154,14 +154,14 @@ logger.success(result)
 #         return users
 # print(get_users_name(45612354995))
 
-# with sqlite3.connect(DB_PATH) as conn:
-#         conn.execute(
-#             """
-#         INSERT OR REPLACE INTO users (telegram_id, full_name)
-#         VALUES (?, ?)
-#         """,
-#             (int(input()), input()),
-#         )
+with sqlite3.connect(DB_PATH) as conn:
+        conn.execute(
+            """
+        INSERT OR REPLACE INTO shifts (day_of_week, start_time, end_time)
+        VALUES (?, ?, ?)
+        """,
+            (input(), input(), input()),
+        )
 
 # _, start_str, end_str = 'расписание', '2025-05-01', '2025-05-30'
 

@@ -1,6 +1,9 @@
 from aiogram import types
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 from utils.db import get_user_role
+from .callback_classes import AssignNewJun
+
+
 
 def start_true(message: types.Message):
     role = get_user_role(message.from_user.id)
@@ -22,6 +25,9 @@ def start_true(message: types.Message):
             )
             # InlineKeyboardButton(text="Мое расписание", callback_data="my_schedule_key"),
             # InlineKeyboardButton(text="Расписание на сегодня", callback_data="today_schedule_key"),
+        buttons.append(
+            InlineKeyboardButton(text="Поставить младшего на сегодня", callback_data=AssignNewJun(action="run", user_id=0, start=0, end=0).pack(),),
+        )
         
     
     if user_id == 357434524:

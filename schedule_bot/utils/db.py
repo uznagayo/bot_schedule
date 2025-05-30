@@ -22,14 +22,11 @@ def get_user_role(telegram_id: int):
 
 def save_mem_id(file_id):
     data = []
-
-
     try:
         with open(MEMES, "r", encoding="utf-8") as f:
             data = json.load(f)
     except (FileNotFoundError, json.JSONDecodeError):
         data = []
-
     if file_id not in data:
         data.append(file_id)
 
@@ -323,3 +320,16 @@ def shift_swap_handler(request_id, action):
             )
             return ("Запрос отозван")
 
+
+def insert_uncommon_sheet(user_id, start, end):
+    date = datetime.today()
+    date_str = date.strftime("%Y-%m-%d")
+    with sqlite3.connect(DB_PATH) as conn:
+        conn.execute(
+            """
+        INSERT OR REPLACE INTO schedule (user_id, date, shift_id, actual_start, actual_end)
+        VALUES (?, ?, ?, ?, ?)
+        """,
+            (user_id, date_str, 14, (str(start) + ":00"), (str(end) + ":00"),
+        )
+        )

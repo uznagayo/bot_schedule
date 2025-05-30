@@ -11,6 +11,7 @@ from utils.db import (
     create_shift_exchange_request,
     shift_swap_handler,
     get_all_schedule,
+    insert_uncommon_sheet,
 )
 from .shifts import (
     new_schedule,
@@ -22,16 +23,14 @@ from .shifts import (
 from .commands import start_true
 from aiogram.filters.callback_data import CallbackData
 from loguru import logger
+from .callback_classes import SwapRequestHandler, WeekScheduleHandler, AssignNewJun
 
 callbacks_router = Router()
 
 
-class SwapRequestHandler(CallbackData, prefix="swap"):
-    action: str
-    request_id: int
 
-class WeekScheduleHandler(CallbackData, prefix="week"):
-    week: bool
+
+# assign_new_jun = CallbackData("assign", "action", "user_id", "start", "end")
 
 
 @callbacks_router.callback_query(lambda c: c.data.startswith("new_shift_day_key"))
@@ -356,3 +355,89 @@ async def swap_hanlder(callback: CallbackQuery, callback_data: SwapRequestHandle
     text = shift_swap_handler(request_id, action)
     await callback.answer(text=text, show_alert=True)
     await get_shift_exchange_request(callback)
+
+@callbacks_router.callback_query(AssignNewJun.filter())
+async def assign_flow(callback: CallbackQuery, callback_data: AssignNewJun):
+    action = callback_data.action
+    user_id = callback_data.user_id
+    start = callback_data.start
+    end = callback_data.end
+
+    if action == "run":
+        keyboard = InlineKeyboardMarkup(inline_keyboard=[])
+        buttons = []
+        users_data = get_users_data()
+        for id, name, __ in users_data:
+            buttons.append(
+            
+                InlineKeyboardButton(text=name, callback_data=AssignNewJun(action="select_start", user_id=id, start=0, end=0).pack(),)
+            
+        )
+        buttons.append(
+        InlineKeyboardButton(
+            text="Назад",
+            callback_data=("back_to_main_menu"),
+            ),
+        )
+        
+        for i in range(0, len(buttons), 2):
+            keyboard.inline_keyboard.append(buttons[i : i + 2])
+        await callback.message.edit_text("Выбери админа")
+        await callback.message.edit_reply_markup(reply_markup=keyboard)
+
+
+    elif action == "select_start":
+        keyboard = InlineKeyboardMarkup(inline_keyboard=[])
+        buttons = []    
+        for i in range(23):
+            buttons.append(
+            
+                InlineKeyboardButton(text=(f"{i}:00"), callback_data=AssignNewJun(action="select_end", user_id=user_id, start=i, end=0).pack(),)
+            
+        )
+        buttons.append(
+        InlineKeyboardButton(
+            text="Назад",
+            callback_data=AssignNewJun(action="run", user_id=0, start=0, end=0).pack(),
+            ),
+        )
+        for i in range(0, len(buttons), 2):
+            keyboard.inline_keyboard.append(buttons[i : i + 2])        
+        await callback.message.edit_text("Выбери начало смены")
+        await callback.message.edit_reply_markup(reply_markup=keyboard)
+
+    elif action == "select_end":
+        keyboard = InlineKeyboardMarkup(inline_keyboard=[])
+        buttons = []    
+        for i in range(23):
+            buttons.append(
+            
+                InlineKeyboardButton(text=(f"{i}:00"), callback_data=AssignNewJun(action="confirm", user_id=user_id, start=start, end=i).pack(),)
+            
+        )
+        buttons.append(
+        InlineKeyboardButton(
+            text="Назад",
+            callback_data=AssignNewJun(action="select_start", user_id=user_id, start=0, end=0).pack(),
+            ),
+        )
+        for i in range(0, len(buttons), 2):
+            keyboard.inline_keyboard.append(buttons[i : i + 2])        
+        await callback.message.edit_text("Выбери конец смены (система не спросит подтверждения)")
+        await callback.message.edit_reply_markup(reply_markup=keyboard)
+
+    elif action == "confirm":
+        try:
+            insert_uncommon_sheet(user_id, start, end)
+            await callback.answer(f"Админ на сегодня соптавлен с {start} до {end}")
+            await callback.message.edit_text("Главное меню")
+            await callback.message.edit_reply_markup(reply_markup=start_true(callback))
+
+        except Exception as e:
+            logger.error(e)
+            await callback.answer("Возникла ошибка")
+            await callback.message.edit_text("Главное меню")
+            await callback.message.edit_reply_markup(reply_markup=start_true(callback))
+
+
+
