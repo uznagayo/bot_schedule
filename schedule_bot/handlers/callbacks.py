@@ -412,7 +412,7 @@ async def assign_flow(callback: CallbackQuery, callback_data: AssignNewJun):
         for i in range(23):
             buttons.append(
             
-                InlineKeyboardButton(text=(f"{i}:00"), callback_data=AssignNewJun(action="confirm", user_id=user_id, start=start, end=i).pack(),)
+                InlineKeyboardButton(text=(f"{i}:00"), callback_data=AssignNewJun(action="end", user_id=user_id, start=start, end=i).pack(),)
             
         )
         buttons.append(
@@ -422,14 +422,33 @@ async def assign_flow(callback: CallbackQuery, callback_data: AssignNewJun):
             ),
         )
         for i in range(0, len(buttons), 2):
-            keyboard.inline_keyboard.append(buttons[i : i + 2])        
+            keyboard.inline_keyboard.append(buttons[i : i + 2])
         await callback.message.edit_text("Выбери конец смены (система не спросит подтверждения)")
         await callback.message.edit_reply_markup(reply_markup=keyboard)
+
+    elif action == "end":
+        keyboard = InlineKeyboardMarkup(inline_keyboard=[])
+        buttons = [
+            InlineKeyboardButton(text="Да", callback_data=AssignNewJun(action="confirm", user_id=user_id, start=start, end=end).pack(),),
+            InlineKeyboardButton(text="Нет", callback_data="back_to_main_menu"),
+        ]
+        user_name = ""
+        with sqlite3.connect(DB_PATH) as conn:
+            result = conn.execute(
+            "SELECT full_name FROM users WHERE id = ?", (user_id,)
+            ).fetchone()
+        user_name = result[0]
+        for i in range(0, len(buttons), 2):
+            keyboard.inline_keyboard.append(buttons[i : i + 2])     
+
+        await callback.message.edit_text(f"Поставить админа {user_name} в смену сегодня с {start} до {end}?")
+        await callback.message.edit_reply_markup(reply_markup=keyboard)
+
 
     elif action == "confirm":
         try:
             insert_uncommon_sheet(user_id, start, end)
-            await callback.answer(f"Админ на сегодня соптавлен с {start} до {end}")
+            await callback.answer(f"Админ на сегодня поставлен с {start} до {end}", show_alert=True)
             await callback.message.edit_text("Главное меню")
             await callback.message.edit_reply_markup(reply_markup=start_true(callback))
 

@@ -1,0 +1,9 @@
+2025-05-29 15:26:09.816 | SUCCESS  | __main__:main:20 - done
+
+Received SIGINT signal
+2025-05-29 15:27:08.101 | SUCCESS  | __main__:main:20 - done
+
+2025-05-29 15:27:47.317 | INFO     | handlers.start:send_meme_handler:31 - Фель заказал мем
+2025-05-29 15:28:10.348 | INFO     | handlers.start:send_meme_handler:31 - Фель заказал мем
+Received SIGINT signal
+Received SIGINT signal

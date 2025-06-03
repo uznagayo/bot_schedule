@@ -36,6 +36,7 @@ nosetests.xml
 # Translations
 *.mo
 *.pot
+schedule.db
 
 # Jupyter notebook
 .ipynb_checkpoints

@@ -10,9 +10,9 @@ cursor = conn.cursor()
 # cursor.execute('SELECT * FROM users')
 # print(cursor.fetchall())
 
-# cursor.execute(
-#     "UPDATE users SET role = 'ancient' WHERE full_name = 'Левацкий Артём Юрьевич'"
-# )
+cursor.execute(
+    "UPDATE users SET role = 'ancient' WHERE full_name = 'Пятиминутка'"
+)
 
 # conn = sqlite3.connect(DB_PATH)
 # cursor = conn.cursor()
@@ -26,14 +26,14 @@ cursor = conn.cursor()
 #     )
 # print(cursor.fetchall())
 
-for i in range(int(input())):
-    cursor.execute(
-        """
-        INSERT OR REPLACE INTO schedule (user_id, date, shift_id,)
-        VALUES (?, ?)
-        """,
-        (int(input()), input()),
-    )
+# for i in range(int(input())):
+#     cursor.execute(
+#         """
+#         INSERT OR REPLACE INTO schedule (user_id, date, shift_id,)
+#         VALUES (?, ?)
+#         """,
+#         (int(input()), input()),
+#     )
 
 # data = "расписание 2025-04-01 2025-05-20"
 # _, start_str, end_str = data.split()

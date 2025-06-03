@@ -142,27 +142,30 @@ from loguru import logger
 
 
 # def get_users_name(user_id: int):
-#     with sqlite3.connect(DB_PATH) as conn:
-#         cursor = conn.cursor()
-#         cursor.execute(
-#             """
-#         SELECT full_name || ' ' || telegram_id
-#         FROM users
-#         """,
-#         )
-#         users = [i[0] for i in cursor.fetchall() if user_id not in i]
-#         return users
+with sqlite3.connect(DB_PATH) as conn:
+    cursor = conn.cursor()
+    cursor.execute(
+        """
+        SELECT *
+        FROM shifts
+        """,
+    )
+    result = cursor.fetchall()
+    
+print(result)
+        
+
 # print(get_users_name(45612354995))
 
-with sqlite3.connect(DB_PATH) as conn:
-        conn.execute(
-            """
-        INSERT OR REPLACE INTO shifts (day_of_week, start_time, end_time)
-        VALUES (?, ?, ?)
-        """,
-            (input(), input(), input()),
-        )
-
+# with sqlite3.connect(DB_PATH) as conn:
+#         conn.execute(
+#             """
+#         INSERT OR REPLACE INTO shifts (day_of_week, start_time, end_time)
+#         VALUES (?, ?, ?)
+#         """,
+#             ("Внеочередная", "12:00", "23:00"),
+#         )
+# print("done")
 # _, start_str, end_str = 'расписание', '2025-05-01', '2025-05-30'
 
 # with sqlite3.connect(DB_PATH) as conn:
