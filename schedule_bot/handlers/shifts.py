@@ -9,6 +9,9 @@ from utils.db import (
 )
 
 from .commands import start_true
+from .callback_classes import CalendarCb
+import calendar
+
 schedule_router = Router()
 
 
@@ -178,4 +181,49 @@ def new_schedule(shift_ids):
         keybroad.inline_keyboard.append(buttons[i : i + 2])
     return keybroad
 
+def generate_calendar(selected_days: set[int] = None, time: bool = True) -> InlineKeyboardMarkup:
+    if selected_days is None:
+        selected_days = set()
 
+    now = datetime.now()
+    year, month = now.year, now.month
+    
+    month_cal = calendar.monthcalendar(year, month)
+    
+
+    buttons = []
+
+    week_days = ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс"]
+    buttons.append([
+        InlineKeyboardButton(text=day, callback_data=CalendarCb(action="ignore", day=0).pack(),)
+        for day in week_days
+    ])
+
+    for week in month_cal:
+        week_buttons = []
+        for day in week:
+            if day == 0:
+                week_buttons.append(
+                    InlineKeyboardButton(text=" ", callback_data=CalendarCb(action="ignore", day=0).pack(),),
+                )
+            else:
+                if day in selected_days:
+                    text = f'{day}✅'
+                    week_buttons.append(InlineKeyboardButton(
+                        text=text,
+                        callback_data=CalendarCb(action="delete", day=str(day), time=time).pack(),),)
+                else:
+                    text = f'{day}'
+                    week_buttons.append(InlineKeyboardButton(
+                        text=text,
+                        callback_data=CalendarCb(action="select", day=str(day), time=time).pack(),),)
+        buttons.append(week_buttons)
+
+    buttons.append([
+        InlineKeyboardButton(
+            text="Назад",
+            callback_data="back_to_main_menu",
+        ),
+    ])
+
+    return InlineKeyboardMarkup(inline_keyboard=buttons)

@@ -12,6 +12,8 @@ from utils.db import (
     shift_swap_handler,
     get_all_schedule,
     insert_uncommon_sheet,
+    get_ancient_sheets,
+    insert_ancient_sheet,
 )
 from .shifts import (
     new_schedule,
@@ -19,15 +21,18 @@ from .shifts import (
     new_schedule_days,
     get_income_requests,
     get_outcome_requests,
+    generate_calendar,
 )
 from .commands import start_true
-from aiogram.filters.callback_data import CallbackData
 from loguru import logger
-from .callback_classes import SwapRequestHandler, WeekScheduleHandler, AssignNewJun
+from .callback_classes import (
+    SwapRequestHandler,
+    WeekScheduleHandler,
+    AssignNewJun,
+    CalendarCb,
+)
 
 callbacks_router = Router()
-
-
 
 
 # assign_new_jun = CallbackData("assign", "action", "user_id", "start", "end")
@@ -53,7 +58,9 @@ async def new_shift_key(callback: CallbackQuery):
     data = callback.data
 
     _, date_str, shift_id, start_time, end_time = data.split(",")
-    logger.info(f"{callback.from_user.first_name} choose {date_str} {shift_id} {start_time} {end_time}")
+    logger.info(
+        f"{callback.from_user.first_name} choose {date_str} {shift_id} {start_time} {end_time}"
+    )
     with sqlite3.connect(DB_PATH) as conn:
         conn.execute(
             """
@@ -308,19 +315,23 @@ async def outcome_request(callback: CallbackQuery):
     await callback.message.edit_text("Что сделать?")
     await callback.message.edit_reply_markup(reply_markup=keybroad)
 
+
 @callbacks_router.callback_query(lambda c: c.data == "schedule_week_key")
 async def week_schedule_choose(callback: CallbackQuery):
     keybroad = InlineKeyboardMarkup(inline_keyboard=[])
     buttons = [
-        
-        InlineKeyboardButton(text="Эта", callback_data=WeekScheduleHandler(week=True).pack(),),
-        InlineKeyboardButton(text="Следующая", callback_data=WeekScheduleHandler(week=False).pack(),),
+        InlineKeyboardButton(
+            text="Эта",
+            callback_data=WeekScheduleHandler(week=True).pack(),
+        ),
+        InlineKeyboardButton(
+            text="Следующая",
+            callback_data=WeekScheduleHandler(week=False).pack(),
+        ),
         InlineKeyboardButton(text="Назад", callback_data="back_to_main_menu"),
-        
     ]
     for i in range(0, len(buttons), 2):
-        keybroad.inline_keyboard.append(buttons[i:i + 2])
-
+        keybroad.inline_keyboard.append(buttons[i : i + 2])
 
     await callback.message.edit_text("Выбери неделю")
     await callback.message.edit_reply_markup(reply_markup=keybroad)
@@ -356,6 +367,7 @@ async def swap_hanlder(callback: CallbackQuery, callback_data: SwapRequestHandle
     await callback.answer(text=text, show_alert=True)
     await get_shift_exchange_request(callback)
 
+
 @callbacks_router.callback_query(AssignNewJun.filter())
 async def assign_flow(callback: CallbackQuery, callback_data: AssignNewJun):
     action = callback_data.action
@@ -369,94 +381,170 @@ async def assign_flow(callback: CallbackQuery, callback_data: AssignNewJun):
         users_data = get_users_data()
         for id, name, __ in users_data:
             buttons.append(
-            
-                InlineKeyboardButton(text=name, callback_data=AssignNewJun(action="select_start", user_id=id, start=0, end=0).pack(),)
-            
-        )
+                InlineKeyboardButton(
+                    text=name,
+                    callback_data=AssignNewJun(
+                        action="select_start", user_id=id, start=0, end=0
+                    ).pack(),
+                )
+            )
         buttons.append(
-        InlineKeyboardButton(
-            text="Назад",
-            callback_data=("back_to_main_menu"),
+            InlineKeyboardButton(
+                text="Назад",
+                callback_data=("back_to_main_menu"),
             ),
         )
-        
+
         for i in range(0, len(buttons), 2):
             keyboard.inline_keyboard.append(buttons[i : i + 2])
         await callback.message.edit_text("Выбери админа")
         await callback.message.edit_reply_markup(reply_markup=keyboard)
 
-
     elif action == "select_start":
         keyboard = InlineKeyboardMarkup(inline_keyboard=[])
-        buttons = []    
+        buttons = []
         for i in range(23):
             buttons.append(
-            
-                InlineKeyboardButton(text=(f"{i}:00"), callback_data=AssignNewJun(action="select_end", user_id=user_id, start=i, end=0).pack(),)
-            
-        )
+                InlineKeyboardButton(
+                    text=(f"{i}:00"),
+                    callback_data=AssignNewJun(
+                        action="select_end", user_id=user_id, start=i, end=0
+                    ).pack(),
+                )
+            )
         buttons.append(
-        InlineKeyboardButton(
-            text="Назад",
-            callback_data=AssignNewJun(action="run", user_id=0, start=0, end=0).pack(),
+            InlineKeyboardButton(
+                text="Назад",
+                callback_data=AssignNewJun(
+                    action="run", user_id=0, start=0, end=0
+                ).pack(),
             ),
         )
         for i in range(0, len(buttons), 2):
-            keyboard.inline_keyboard.append(buttons[i : i + 2])        
+            keyboard.inline_keyboard.append(buttons[i : i + 2])
         await callback.message.edit_text("Выбери начало смены")
         await callback.message.edit_reply_markup(reply_markup=keyboard)
 
     elif action == "select_end":
         keyboard = InlineKeyboardMarkup(inline_keyboard=[])
-        buttons = []    
+        buttons = []
         for i in range(23):
             buttons.append(
-            
-                InlineKeyboardButton(text=(f"{i}:00"), callback_data=AssignNewJun(action="end", user_id=user_id, start=start, end=i).pack(),)
-            
-        )
+                InlineKeyboardButton(
+                    text=(f"{i}:00"),
+                    callback_data=AssignNewJun(
+                        action="end", user_id=user_id, start=start, end=i
+                    ).pack(),
+                )
+            )
         buttons.append(
-        InlineKeyboardButton(
-            text="Назад",
-            callback_data=AssignNewJun(action="select_start", user_id=user_id, start=0, end=0).pack(),
+            InlineKeyboardButton(
+                text="Назад",
+                callback_data=AssignNewJun(
+                    action="select_start", user_id=user_id, start=0, end=0
+                ).pack(),
             ),
         )
         for i in range(0, len(buttons), 2):
             keyboard.inline_keyboard.append(buttons[i : i + 2])
-        await callback.message.edit_text("Выбери конец смены (система не спросит подтверждения)")
+        await callback.message.edit_text(
+            "Выбери конец смены (система не спросит подтверждения)"
+        )
         await callback.message.edit_reply_markup(reply_markup=keyboard)
 
     elif action == "end":
         keyboard = InlineKeyboardMarkup(inline_keyboard=[])
         buttons = [
-            InlineKeyboardButton(text="Да", callback_data=AssignNewJun(action="confirm", user_id=user_id, start=start, end=end).pack(),),
+            InlineKeyboardButton(
+                text="Да",
+                callback_data=AssignNewJun(
+                    action="confirm", user_id=user_id, start=start, end=end
+                ).pack(),
+            ),
             InlineKeyboardButton(text="Нет", callback_data="back_to_main_menu"),
         ]
         user_name = ""
         with sqlite3.connect(DB_PATH) as conn:
             result = conn.execute(
-            "SELECT full_name FROM users WHERE id = ?", (user_id,)
+                "SELECT full_name FROM users WHERE id = ?", (user_id,)
             ).fetchone()
         user_name = result[0]
         for i in range(0, len(buttons), 2):
-            keyboard.inline_keyboard.append(buttons[i : i + 2])     
+            keyboard.inline_keyboard.append(buttons[i : i + 2])
 
-        await callback.message.edit_text(f"Поставить админа {user_name} в смену сегодня с {start} до {end}?")
+        await callback.message.edit_text(
+            f"Поставить админа {user_name} в смену сегодня с {start} до {end}?"
+        )
         await callback.message.edit_reply_markup(reply_markup=keyboard)
-
 
     elif action == "confirm":
         try:
             insert_uncommon_sheet(user_id, start, end)
-            await callback.answer(f"Админ на сегодня поставлен с {start} до {end}", show_alert=True)
+            await callback.answer(
+                f"Админ на сегодня поставлен с {start} до {end}", show_alert=True
+            )
             await callback.message.edit_text("Главное меню")
             await callback.message.edit_reply_markup(reply_markup=start_true(callback))
 
         except Exception as e:
             logger.error(e)
-            await callback.answer("Возникла ошибка")
+            await callback.answer("Возникла ошибка", show_alert=True)
             await callback.message.edit_text("Главное меню")
             await callback.message.edit_reply_markup(reply_markup=start_true(callback))
 
 
+@callbacks_router.callback_query(CalendarCb.filter())
+async def calendar_callback(callback: CallbackQuery, callback_data: CalendarCb):
+    action = callback_data.action
+    day = callback_data.day
+    time = callback_data.time
+    user_id = get_user_id(callback.from_user.id)
+    a = "\n"
+    days_int = []
+    dates = ""
 
+    id, t, __, selected_days, year, month = get_ancient_sheets(user_id, time=time)
+    if day < 10:
+        day = f"0{day}"
+    day_str = f"{year}-{month}-{day}"
+    # if selected_days:
+    #     for i in range(len(selected_days)):
+    #         days_int.append(int(selected_days[i][-2:]))
+    #         dates += f"{selected_days[i]} -- {t[i]} \n"
+
+    if action == "select":
+        insert_ancient_sheet(user_id=user_id, day_night=time, date=day_str)
+        await callback.answer(f"Выбрана смена {day_str}")
+        id, t, __, selected_days, year, month = get_ancient_sheets(user_id, time=time)
+        if selected_days:
+            for i in range(len(selected_days)):
+                days_int.append(int(selected_days[i][-2:]))
+                dates += f"{selected_days[i]} -- {t[i]} \n"
+        await callback.message.edit_text(f"Твои смены: \n{dates}")
+        await callback.message.edit_reply_markup(
+            reply_markup=generate_calendar(days_int, time=time)
+        )
+
+    elif action == "show":
+        id, t, __, selected_days, year, month = get_ancient_sheets(user_id, time=time)
+        if selected_days:
+            for i in range(len(selected_days)):
+                days_int.append(int(selected_days[i][-2:]))
+                dates += f"{selected_days[i]} -- {t[i]} \n"
+        await callback.message.edit_text(f"Твои смены: \n{dates}")
+        await callback.message.edit_reply_markup(
+            reply_markup=generate_calendar(days_int, time=time)
+        )
+
+    elif action == "delete":
+        insert_ancient_sheet(ins=False, date=day_str)
+        await callback.answer("Смена удалена")
+        id, t, __, selected_days, year, month = get_ancient_sheets(user_id, time=time)
+        if selected_days:
+            for i in range(len(selected_days)):
+                days_int.append(int(selected_days[i][-2:]))
+                dates += f"{selected_days[i]} -- {t[i]} \n"
+        await callback.message.edit_text(f"Твои смены: \n{dates}")
+        await callback.message.edit_reply_markup(
+            reply_markup=generate_calendar(days_int, time=time)
+        )

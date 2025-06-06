@@ -5,8 +5,8 @@ from loguru import logger
 
 
 
-# conn = sqlite3.connect(DB_PATH)
-# cursor = conn.cursor()
+conn = sqlite3.connect(DB_PATH)
+cursor = conn.cursor()
 # with sqlite3.connect(DB_PATH) as conn:
 #     cursor = conn.cursor()
 #     cursor.execute(
@@ -49,7 +49,7 @@ from loguru import logger
 # recipient_id, shift_id = result[0]
 # print(recipient_id, shift_id)
 
-# cursor.execute(f'DELETE FROM shift_exchange_requests WHERE shift_id = {111}')
+cursor.execute(f'DELETE FROM ancient_schedule WHERE user_id = {1}')
 
 # cursor.execute(
 #     """
@@ -88,9 +88,9 @@ from loguru import logger
 # FOREIGN KEY(shift_id) REFERENCES shifts(id)
 # )
 # """)
-# print("done")
-# conn.commit()
-# conn.close()
+print("done")
+conn.commit()
+conn.close()
 
 # with sqlite3.connect(DB_PATH) as conn:
 #         cursor = conn.cursor()
@@ -142,17 +142,17 @@ from loguru import logger
 
 
 # def get_users_name(user_id: int):
-with sqlite3.connect(DB_PATH) as conn:
-    cursor = conn.cursor()
-    cursor.execute(
-        """
-        SELECT *
-        FROM shifts
-        """,
-    )
-    result = cursor.fetchall()
+# with sqlite3.connect(DB_PATH) as conn:
+#     cursor = conn.cursor()
+#     cursor.execute(
+#         """
+#         SELECT *
+#         FROM shifts
+#         """,
+#     )
+#     result = cursor.fetchall()
     
-print(result)
+# print(result)
         
 
 # print(get_users_name(45612354995))

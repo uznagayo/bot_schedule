@@ -3,8 +3,11 @@ from handlers.config import DB_PATH
 from datetime import datetime, timedelta
 import json
 from random import choice
+import calendar
+
 
 MEMES = "memes.json"
+
 
 def get_user_role(telegram_id: int):
     with sqlite3.connect(DB_PATH) as conn:
@@ -19,6 +22,7 @@ def get_user_role(telegram_id: int):
         )
         result = cursor.fetchone()
         return result[0] if result else None
+
 
 def save_mem_id(file_id):
     data = []
@@ -80,12 +84,12 @@ def get_schedule(user_id, start_date: datetime):
 
 def get_all_schedule(week: bool):
     start_of_week = datetime.today() - timedelta(days=datetime.today().weekday())
-    
+
     if week:
-            end_of_week = start_of_week + timedelta(days=6)
-            with sqlite3.connect(DB_PATH) as conn:
-                cursor = conn.cursor()
-                cursor.execute(
+        end_of_week = start_of_week + timedelta(days=6)
+        with sqlite3.connect(DB_PATH) as conn:
+            cursor = conn.cursor()
+            cursor.execute(
                 """
                 SELECT day_of_week, actual_start, actual_end, users.full_name
                 FROM shifts
@@ -94,15 +98,15 @@ def get_all_schedule(week: bool):
                 WHERE date BETWEEN ? AND ?
                 ORDER BY date
                 """,
-                    (start_of_week.strftime("%Y-%m-%d"), end_of_week.strftime("%Y-%m-%d")),
-                )
-                return cursor.fetchall()
+                (start_of_week.strftime("%Y-%m-%d"), end_of_week.strftime("%Y-%m-%d")),
+            )
+            return cursor.fetchall()
     else:
         start_of_week += timedelta(days=7)
         end_of_week = start_of_week + timedelta(days=6)
         with sqlite3.connect(DB_PATH) as conn:
-                cursor = conn.cursor()
-                cursor.execute(
+            cursor = conn.cursor()
+            cursor.execute(
                 """
                 SELECT day_of_week, actual_start, actual_end, users.full_name
                 FROM shifts
@@ -111,9 +115,10 @@ def get_all_schedule(week: bool):
                 WHERE date BETWEEN ? AND ?
                 ORDER BY date
                 """,
-                    (start_of_week.strftime("%Y-%m-%d"), end_of_week.strftime("%Y-%m-%d")),
-                )
-                return cursor.fetchall()
+                (start_of_week.strftime("%Y-%m-%d"), end_of_week.strftime("%Y-%m-%d")),
+            )
+            return cursor.fetchall()
+
 
 def get_onday_admins(day: datetime):
     with sqlite3.connect(DB_PATH) as conn:
@@ -125,9 +130,10 @@ def get_onday_admins(day: datetime):
             JOIN schedule ON schedule.user_id = users.id
             WHERE date = ?
             """,
-                (day.strftime("%Y-%m-%d"),),
+            (day.strftime("%Y-%m-%d"),),
         )
         return cursor.fetchall
+
 
 def get_users_data():
     with sqlite3.connect(DB_PATH) as conn:
@@ -283,42 +289,40 @@ def get_requests_id(telegram_id: int, way: bool = True):
             return cursor.fetchall()
 
 
-
-
 def shift_swap_handler(request_id, action):
     with sqlite3.connect(DB_PATH) as conn:
         cursor = conn.cursor()
-        if action == 'accepted':
+        if action == "accepted":
             cursor.execute(
-            """
+                """
                 SELECT recipient_id, shift_id
                 FROM shift_exchange_requests
                 WHERE id = ?
                 """,
-            (request_id,),
+                (request_id,),
             )
             result = cursor.fetchall()
             recipient_id, shift_id = result[0]
 
             cursor.execute(
-            f"UPDATE schedule SET user_id = {recipient_id} WHERE id = {shift_id}"
+                f"UPDATE schedule SET user_id = {recipient_id} WHERE id = {shift_id}"
             )
             cursor.execute(
-            f"UPDATE shift_exchange_requests SET status = 'accepted' WHERE id = {request_id}"
+                f"UPDATE shift_exchange_requests SET status = 'accepted' WHERE id = {request_id}"
             )
-            return ("Смена принята")
+            return "Смена принята"
 
-        elif action == 'declined':
+        elif action == "declined":
             cursor.execute(
-            f"UPDATE shift_exchange_requests SET status = 'declined' WHERE id = {request_id}"
+                f"UPDATE shift_exchange_requests SET status = 'declined' WHERE id = {request_id}"
             )
-            return ("Как хош")
+            return "Как хош"
 
-        elif action == 'canceled':
+        elif action == "canceled":
             cursor.execute(
-            f"UPDATE shift_exchange_requests SET status = 'canceled' WHERE id = {request_id}"
+                f"UPDATE shift_exchange_requests SET status = 'canceled' WHERE id = {request_id}"
             )
-            return ("Запрос отозван")
+            return "Запрос отозван"
 
 
 def insert_uncommon_sheet(user_id, start, end):
@@ -330,6 +334,93 @@ def insert_uncommon_sheet(user_id, start, end):
         INSERT OR REPLACE INTO schedule (user_id, date, shift_id, actual_start, actual_end)
         VALUES (?, ?, ?, ?, ?)
         """,
-            (user_id, date_str, 14, (str(start) + ":00"), (str(end) + ":00"),
+            (
+                user_id,
+                date_str,
+                14,
+                (str(start) + ":00"),
+                (str(end) + ":00"),
+            ),
         )
+
+
+def get_ancient_sheets(user_id, time: bool = True, date: str = ""):
+    if time:
+        t = "День"
+    else:
+        t = "Ночь"
+
+    today = datetime.today()
+    year, month = today.year, today.month
+    if not date:
+        first_day = datetime(year, month, 1).strftime("%Y-%m-%d")
+        last_day = datetime(year, month, calendar.monthrange(year, month)[1]).strftime(
+            "%Y-%m-%d"
         )
+    else:
+        first_day = date
+        last_day = date
+
+    with sqlite3.connect(DB_PATH) as conn:
+        cursor = conn.cursor()
+        cursor.execute(
+            """
+            SELECT *
+            FROM ancient_schedule
+            WHERE user_id IS NULL OR user_id = ?
+                AND date BETWEEN ? AND ?
+                AND day_night = ?
+            ORDER BY date
+            """,
+            (user_id, first_day, last_day, t),
+        )
+        result = cursor.fetchall()
+    if not result:
+        return [], [], user_id, [], today.strftime("%Y"), today.strftime("%m")
+
+    id = [i[0] for i in result]
+    day_night = [i[1] for i in result]
+    user = [i[2] for i in result]
+    date = [i[3] for i in result]
+
+    return id, day_night, user, date, today.strftime("%Y"), today.strftime("%m")
+
+
+def insert_ancient_sheet(
+    user_id=0, day_night=True, date="", ins=True, exs=False, id=None
+):
+    if ins and not exs:
+        time = "День" if day_night else "Ночь"
+        with sqlite3.connect(DB_PATH) as conn:
+            cursor = conn.cursor()
+            cursor.execute(
+                """
+                INSERT OR REPLACE INTO ancient_schedule (user_id, day_night, date)
+                VALUES (?, ?, ?)
+                """,
+                (user_id, time, date),
+            )
+            conn.commit()
+    elif exs:
+        with sqlite3.connect(DB_PATH) as conn:
+            cursor = conn.cursor()
+            cursor.execute(
+                """
+                UPDATE ancient_schedule (user_id)
+                SET user_id = ?
+                WHERE id = ?
+                """,
+                (user_id, id),
+            )
+            conn.commit()
+    elif not ins and not exs:
+        with sqlite3.connect(DB_PATH) as conn:
+            cursor = conn.cursor()
+            cursor.execute(
+                """
+                DELETE FROM ancient_schedule
+                WHERE date = ?
+                """,
+                (date,),
+            )
+            conn.commit()
