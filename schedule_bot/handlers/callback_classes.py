@@ -13,3 +13,10 @@ class AssignNewJun(CallbackData, prefix="assign"):
     user_id: int
     start: int
     end: int
+
+
+class CalendarCb(CallbackData, prefix="calendar"):
+    action: str
+    day: int
+    time: bool = True
+
