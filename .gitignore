@@ -55,3 +55,4 @@ dmypy.sock
 
 # OS or Editor Folders
 .DS_Store
+schedule.db
