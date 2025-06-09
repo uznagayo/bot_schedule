@@ -537,14 +537,15 @@ async def calendar_callback(callback: CallbackQuery, callback_data: CalendarCb):
         )
 
     elif action == "delete":
-        insert_ancient_sheet(ins=False, date=day_str)
-        await callback.answer("Смена удалена")
-        id, t, __, selected_days, year, month = get_ancient_sheets(user_id, time=time)
-        if selected_days:
-            for i in range(len(selected_days)):
-                days_int.append(int(selected_days[i][-2:]))
-                dates += f"{selected_days[i]} -- {t[i]} \n"
-        await callback.message.edit_text(f"Твои смены: \n{dates}")
-        await callback.message.edit_reply_markup(
-            reply_markup=generate_calendar(days_int, time=time)
-        )
+        # insert_ancient_sheet(ins=False, date=day_str)
+        # await callback.answer("Смена удалена")
+        # id, t, __, selected_days, year, month = get_ancient_sheets(user_id, time=time)
+        # if selected_days:
+        #     for i in range(len(selected_days)):
+        #         days_int.append(int(selected_days[i][-2:]))
+        #         dates += f"{selected_days[i]} -- {t[i]} \n"
+        # await callback.message.edit_text(f"Твои смены: \n{dates}")
+        # await callback.message.edit_reply_markup(
+        #     reply_markup=generate_calendar(days_int, time=time)
+        # )
+        await callback.answer("Не тыкай сюда, это не работает", show_alert=True)
