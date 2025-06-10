@@ -386,7 +386,7 @@ def get_ancient_sheets(time: bool = True, date: str = ""):
         )
         result = cursor.fetchall()
     if not result:
-        return [], [], 0, [], today.strftime("%Y"), today.strftime("%m")
+        return [], [], [0], [], today.strftime("%Y"), today.strftime("%m")
 
     id = [i[0] for i in result]
     day_night = [i[1] for i in result]

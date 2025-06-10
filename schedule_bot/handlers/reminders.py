@@ -6,6 +6,7 @@ from loguru import logger
 from .callback_classes import AncientDutiesCb
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 from .config import channel_id
+from .duties import ancient_admin_duties, junior_admin_duties
 
 
 reminders_router = Router()
@@ -25,8 +26,11 @@ async def reminders(bot: Bot):
         today = datetime.now()
         today.strftime("%Y-%m-%d")
 
+        if (today.weekday == 3 or today.weekday == 0) and today.hour == 12 and today.minute == 30:
+            await flowers_rem(bot)
+
         if today.hour == 20 and today.minute == 30:
-            await ancient_kassa_rem(bot)
+            await kassa_rem(bot)
             # await bot.send_message(chat_id=357434524, text='test')
 
         if today.weekday() == 4 and today.hour == 16 and today.minute == 30:
@@ -46,8 +50,22 @@ async def select_schedule_rem(bot: Bot):
         except Exception as e:
             await logger.exception(id, e)
 
+async def kassa_rem(bot: Bot):
+    duties = {"Пора считать кассу, и сверить безнал":
+              "kassa_check"}
+    await ancient_universal_rem(duties=duties, bot=bot)
 
-async def ancient_kassa_rem(bot: Bot):
+
+async def flowers_rem(bot: Bot):
+    duties = {"Нужно полить цветы":
+              "flowers_rem"}
+    await ancient_universal_rem(duties, bot)
+
+async def ancient_universal_rem(duties: dict[str, str], bot: Bot):
+    dutie_str = str(list(duties.keys())[0])
+    dutie_cb = str(list(duties.values())[0])
+
+
     today = datetime.now()
     time = today.strftime("%Y-%m-%d, %H-%M-%S")
     keybroad = InlineKeyboardMarkup(
@@ -56,7 +74,7 @@ async def ancient_kassa_rem(bot: Bot):
                 InlineKeyboardButton(
                     text="Сделано",
                     callback_data=AncientDutiesCb(
-                        dutie="kassa_check", conf=True, time_mark=time
+                        dutie=dutie_cb, conf=True, time_mark=time
                     ).pack(),
                 )
             ],
@@ -64,7 +82,7 @@ async def ancient_kassa_rem(bot: Bot):
                 InlineKeyboardButton(
                     text="Не сделано",
                     callback_data=AncientDutiesCb(
-                        dutie="kassa_check",
+                        dutie=dutie_cb,
                         conf=False,
                         time_mark=time,
                     ).pack(),
@@ -83,12 +101,12 @@ async def ancient_kassa_rem(bot: Bot):
         try:
             await bot.send_message(
                 chat_id=telegram_id,
-                text="Пора считать кассу, и сверить безнал",
+                text=f"Это сообщение означает, что тебе пора сделать кое-что:\n{dutie_str}",
                 reply_markup=keybroad,
             )
             await bot.send_message(
                 chat_id=channel_id,
-                text=f"kassa_check message sended to {name} in {time}"
+                text=f"{dutie_cb} message sended to {name} in {time}"
             )
             logger.info(f"message send to {name}")
         except Exception as e:

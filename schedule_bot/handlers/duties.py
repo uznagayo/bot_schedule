@@ -1,11 +1,12 @@
 
-ancient_admin_duties = [
-    "Пни младшего",
-    "Проверь мусор",
-    "Обойди залы",
-    "Проверь ВК и телегу",
-    "Проверь толчки"
-]
+ancient_admin_duties = {
+    "Пни младшего": "jun_punch",
+    "Проверь мусор": "garbage_rem",
+    "Обойди залы": "territory_check",
+    "Проверь ВК и телегу": "messengers_check",
+    "Проверь толчки": "bathrooms_check",
+    "Заполнить загрузку": "people_check"
+}
 
 junior_admin_duties = [
     "Проверь расходники в зале (чай, сахар, салфетки и т.д.)",
