@@ -26,14 +26,14 @@ async def reminders(bot: Bot):
         today = datetime.now()
         today.strftime("%Y-%m-%d")
 
-        if (today.weekday == 3 or today.weekday == 0) and today.hour == 12 and today.minute == 30:
+        if (today.weekday == 3 or today.weekday == 0) and today.hour == 9 and today.minute == 30:
             await flowers_rem(bot)
 
-        if today.hour == 20 and today.minute == 30:
+        if today.hour == 17 and today.minute == 30:
             await kassa_rem(bot)
             # await bot.send_message(chat_id=357434524, text='test')
 
-        if today.weekday() == 4 and today.hour == 16 and today.minute == 30:
+        if today.weekday() == 4 and today.hour == 13 and today.minute == 30:
             await select_schedule_rem(bot)
 
         await asyncio.sleep(60)
