@@ -538,7 +538,8 @@ async def calendar_callback(callback: CallbackQuery, callback_data: CalendarCb):
         if selected_days:
             days_dict = dict(zip(selected_days, admin))
             for i in range(len(selected_days)):
-                dates += f"{selected_days[i]} -- {t[i]} \n"
+                if admin[i] == user_id:
+                    dates += f"{selected_days[i]} -- {t[i]} \n"
         await callback.message.edit_text(f"Твои смены: \n{dates}")
         await callback.message.edit_reply_markup(
             reply_markup=generate_calendar(days_dict, time=time, user_id=user_id)

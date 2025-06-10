@@ -25,7 +25,7 @@ async def reminders(bot: Bot):
         today = datetime.now()
         today.strftime("%Y-%m-%d")
 
-        if today.hour == 22:
+        if today.hour == 20 and today.minute == 30:
             await ancient_kassa_rem(bot)
             # await bot.send_message(chat_id=357434524, text='test')
 
