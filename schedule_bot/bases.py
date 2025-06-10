@@ -5,8 +5,8 @@ from loguru import logger
 
 
 
-conn = sqlite3.connect(DB_PATH)
-cursor = conn.cursor()
+# conn = sqlite3.connect(DB_PATH)
+# cursor = conn.cursor()
 # with sqlite3.connect(DB_PATH) as conn:
 #     cursor = conn.cursor()
 #     cursor.execute(
@@ -49,7 +49,7 @@ cursor = conn.cursor()
 # recipient_id, shift_id = result[0]
 # print(recipient_id, shift_id)
 
-cursor.execute(f'DELETE FROM ancient_schedule WHERE user_id = {1}')
+# cursor.execute(f'DELETE FROM ancient_schedule WHERE user_id = {1}')
 
 # cursor.execute(
 #     """
@@ -88,9 +88,9 @@ cursor.execute(f'DELETE FROM ancient_schedule WHERE user_id = {1}')
 # FOREIGN KEY(shift_id) REFERENCES shifts(id)
 # )
 # """)
-print("done")
-conn.commit()
-conn.close()
+# print("done")
+# conn.commit()
+# conn.close()
 
 # with sqlite3.connect(DB_PATH) as conn:
 #         cursor = conn.cursor()
@@ -179,3 +179,42 @@ conn.close()
 #             """, (start_str, end_str))
 #             shifts = cursor.fetchall()
 # print(shifts)
+user_id = 1
+# first_day = '2025-05-01'
+# last_day = '2025-06-30'
+# t = "День"
+# with sqlite3.connect(DB_PATH) as conn:
+#         cursor = conn.cursor()
+#         cursor.execute(
+#             """
+#             SELECT *
+#             FROM ancient_schedule
+#             WHERE 
+#                 date BETWEEN ? AND ?
+#                 AND day_night = ?
+#             ORDER BY date
+#             """,
+#             (first_day, last_day, t),
+#         )
+#         result = cursor.fetchall()
+
+with sqlite3.connect(DB_PATH) as conn:
+        cursor = conn.cursor()
+        cursor.execute(
+            """
+        SELECT id, full_name, telegram_id
+        FROM users
+        WHERE (id = ? OR ? IS NULL) 
+        AND (telegram_id = ? OR ? IS NULL) 
+        AND (role = ? OR ? IS NULL)
+        """,
+            (
+                user_id, user_id,
+                None, None,
+                None, None
+            ),
+        )
+result = cursor.fetchall()
+
+
+print (result)

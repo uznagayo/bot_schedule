@@ -19,4 +19,11 @@ class CalendarCb(CallbackData, prefix="calendar"):
     action: str
     day: int
     time: bool = True
+    user_id: int = 0
 
+
+class AncientDutiesCb(CallbackData, prefix="ancient"):
+    dutie: str
+    conf: bool
+    time_mark: str
+    

@@ -49,10 +49,10 @@ def send_meme():
     return meme
 
 
-def get_user_name(telegram_id: int):
+def get_user_name(id: int):
     with sqlite3.connect(DB_PATH) as conn:
         result = conn.execute(
-            "SELECT full_name FROM users WHERE telegram_id = ?", (telegram_id,)
+            "SELECT full_name FROM users WHERE id = ?", (id,)
         ).fetchone()
         return result[0] if result else None
 
@@ -135,15 +135,25 @@ def get_onday_admins(day: datetime):
         return cursor.fetchall
 
 
-def get_users_data():
+def get_users_data(
+        user_id = None, telegram_id = None, role = None
+):
     with sqlite3.connect(DB_PATH) as conn:
         cursor = conn.cursor()
         cursor.execute(
             """
         SELECT id, full_name, telegram_id
         FROM users
+        WHERE (id = ? OR ? IS NULL)
+        AND (telegram_id = ? OR ? IS NULL) 
+        AND (role = ? OR ? IS NULL)
         """,
-        )
+            (
+                user_id, user_id,
+                telegram_id, telegram_id,
+                role, role
+            ),
+        ) 
         return cursor.fetchall()
 
 
@@ -344,7 +354,7 @@ def insert_uncommon_sheet(user_id, start, end):
         )
 
 
-def get_ancient_sheets(user_id, time: bool = True, date: str = ""):
+def get_ancient_sheets(time: bool = True, date: str = ""):
     if time:
         t = "День"
     else:
@@ -367,16 +377,16 @@ def get_ancient_sheets(user_id, time: bool = True, date: str = ""):
             """
             SELECT *
             FROM ancient_schedule
-            WHERE user_id IS NULL OR user_id = ?
-                AND date BETWEEN ? AND ?
+            WHERE
+                date BETWEEN ? AND ?
                 AND day_night = ?
             ORDER BY date
             """,
-            (user_id, first_day, last_day, t),
+            (first_day, last_day, t),
         )
         result = cursor.fetchall()
     if not result:
-        return [], [], user_id, [], today.strftime("%Y"), today.strftime("%m")
+        return [], [], 0, [], today.strftime("%Y"), today.strftime("%m")
 
     id = [i[0] for i in result]
     day_night = [i[1] for i in result]
@@ -389,8 +399,8 @@ def get_ancient_sheets(user_id, time: bool = True, date: str = ""):
 def insert_ancient_sheet(
     user_id=0, day_night=True, date="", ins=True, exs=False, id=None
 ):
+    time = "День" if day_night else "Ночь"
     if ins and not exs:
-        time = "День" if day_night else "Ночь"
         with sqlite3.connect(DB_PATH) as conn:
             cursor = conn.cursor()
             cursor.execute(
@@ -419,8 +429,10 @@ def insert_ancient_sheet(
             cursor.execute(
                 """
                 DELETE FROM ancient_schedule
-                WHERE date = ?
+                WHERE date = ? 
+                AND user_id = ?
+                AND day_night = ?
                 """,
-                (date,),
+                (date, user_id, time),
             )
             conn.commit()

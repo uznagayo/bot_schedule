@@ -1,7 +1,7 @@
-from aiogram import Router
+from aiogram import Router, Bot
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton, CallbackQuery
 import sqlite3
-from .config import DB_PATH
+from .config import DB_PATH, channel_id
 from utils.db import (
     get_user_id,
     delete_shift_not,
@@ -14,6 +14,7 @@ from utils.db import (
     insert_uncommon_sheet,
     get_ancient_sheets,
     insert_ancient_sheet,
+    get_user_name,
 )
 from .shifts import (
     new_schedule,
@@ -30,7 +31,11 @@ from .callback_classes import (
     WeekScheduleHandler,
     AssignNewJun,
     CalendarCb,
+    AncientDutiesCb,
 )
+from .commands import buttons
+from datetime import datetime
+
 
 callbacks_router = Router()
 
@@ -145,7 +150,7 @@ async def delete_shift(callback: CallbackQuery):
         await callback.answer("Смена удалена!", show_alert=True)
         await this_week(callback)
         await callback.bot.send_message(
-            chat_id=357434524, text=f"{callback.from_user.first_name} удалил смену {id}"
+            chat_id=channel_id, text=f"{callback.from_user.first_name} удалил смену {id}"
         )
     except Exception as e:
         logger.exception(e)
@@ -199,7 +204,7 @@ async def choosing_recipient(callback: CallbackQuery):
     buttons = []
     users_data = get_users_data()
     for users_id, users_name, users_telegram_id in users_data:
-        if users_telegram_id == user_id:
+        if users_id == user_id:
             continue
 
         buttons.append(
@@ -248,7 +253,7 @@ async def get_shift_exchange_request(callback: CallbackQuery):
     buttons.append(
         InlineKeyboardButton(
             text="Назад",
-            callback_data=("back_to_main_menu"),
+            callback_data=("but_key:jun"),
         ),
     )
     for i in range(0, len(buttons), 2):
@@ -391,7 +396,7 @@ async def assign_flow(callback: CallbackQuery, callback_data: AssignNewJun):
         buttons.append(
             InlineKeyboardButton(
                 text="Назад",
-                callback_data=("back_to_main_menu"),
+                callback_data=("but_key:ancient"),
             ),
         )
 
@@ -461,7 +466,7 @@ async def assign_flow(callback: CallbackQuery, callback_data: AssignNewJun):
                     action="confirm", user_id=user_id, start=start, end=end
                 ).pack(),
             ),
-            InlineKeyboardButton(text="Нет", callback_data="back_to_main_menu"),
+            InlineKeyboardButton(text="Нет", callback_data="but_key:ancient"),
         ]
         user_name = ""
         with sqlite3.connect(DB_PATH) as conn:
@@ -498,12 +503,15 @@ async def calendar_callback(callback: CallbackQuery, callback_data: CalendarCb):
     action = callback_data.action
     day = callback_data.day
     time = callback_data.time
+    admin_name = get_user_name(callback_data.user_id)
     user_id = get_user_id(callback.from_user.id)
     a = "\n"
-    days_int = []
+    days_dict = {}
     dates = ""
 
-    id, t, __, selected_days, year, month = get_ancient_sheets(user_id, time=time)
+    id, t, admin, selected_days, year, month = get_ancient_sheets(time=time)
+    if selected_days:
+        days_dict = dict(zip(selected_days, admin))
     if day < 10:
         day = f"0{day}"
     day_str = f"{year}-{month}-{day}"
@@ -515,37 +523,63 @@ async def calendar_callback(callback: CallbackQuery, callback_data: CalendarCb):
     if action == "select":
         insert_ancient_sheet(user_id=user_id, day_night=time, date=day_str)
         await callback.answer(f"Выбрана смена {day_str}")
-        id, t, __, selected_days, year, month = get_ancient_sheets(user_id, time=time)
+        id, t, admin, selected_days, year, month = get_ancient_sheets(time=time)
         if selected_days:
+            days_dict = dict(zip(selected_days, admin))
             for i in range(len(selected_days)):
-                days_int.append(int(selected_days[i][-2:]))
                 dates += f"{selected_days[i]} -- {t[i]} \n"
         await callback.message.edit_text(f"Твои смены: \n{dates}")
         await callback.message.edit_reply_markup(
-            reply_markup=generate_calendar(days_int, time=time)
+            reply_markup=generate_calendar(days_dict, time=time, user_id=user_id)
         )
 
     elif action == "show":
-        id, t, __, selected_days, year, month = get_ancient_sheets(user_id, time=time)
+        id, t, admin, selected_days, year, month = get_ancient_sheets(time=time)
         if selected_days:
+            days_dict = dict(zip(selected_days, admin))
             for i in range(len(selected_days)):
-                days_int.append(int(selected_days[i][-2:]))
                 dates += f"{selected_days[i]} -- {t[i]} \n"
         await callback.message.edit_text(f"Твои смены: \n{dates}")
         await callback.message.edit_reply_markup(
-            reply_markup=generate_calendar(days_int, time=time)
+            reply_markup=generate_calendar(days_dict, time=time, user_id=user_id)
         )
 
     elif action == "delete":
-        # insert_ancient_sheet(ins=False, date=day_str)
-        # await callback.answer("Смена удалена")
-        # id, t, __, selected_days, year, month = get_ancient_sheets(user_id, time=time)
-        # if selected_days:
-        #     for i in range(len(selected_days)):
-        #         days_int.append(int(selected_days[i][-2:]))
-        #         dates += f"{selected_days[i]} -- {t[i]} \n"
-        # await callback.message.edit_text(f"Твои смены: \n{dates}")
-        # await callback.message.edit_reply_markup(
-        #     reply_markup=generate_calendar(days_int, time=time)
-        # )
-        await callback.answer("Не тыкай сюда, это не работает", show_alert=True)
+        insert_ancient_sheet(ins=False, date=day_str, day_night=time, user_id=user_id)
+        await callback.answer("Смена удалена", show_alert=True)
+        id, t, admin, selected_days, year, month = get_ancient_sheets(time=time)
+        if selected_days:
+            days_dict = dict(zip(selected_days, admin))
+            for i in range(len(selected_days)):
+                dates += f"{selected_days[i]} -- {t[i]} \n"
+        else:
+            days_dict = {}
+        await callback.message.edit_text(f"Твои смены: \n{dates}")
+        await callback.message.edit_reply_markup(
+            reply_markup=generate_calendar(days_dict, time=time, user_id=user_id)
+        )
+
+    elif action == "admin_show":
+        await callback.answer(f"Смена забита админом {admin_name}", show_alert=True)
+
+
+@callbacks_router.callback_query(lambda c: c.data.startswith("but_key:"))
+async def but_key(callback: CallbackQuery):
+    data = callback.data
+    role = True if data.split(":")[-1] == "ancient" else False
+    keybroad = buttons(admin=role)
+    await callback.message.edit_text("Выбери функционал")
+    await callback.message.edit_reply_markup(reply_markup=keybroad)
+
+
+@callbacks_router.callback_query(AncientDutiesCb.filter())
+async def ancient_duties_callback(callback: CallbackQuery, callback_data: AncientDutiesCb, bot: Bot):
+    data = get_users_data(telegram_id=callback.from_user.id)
+    __, name, __ = data[0]
+    dutie = callback_data.dutie
+    conf = "Подтверждено" if callback_data.conf else "Не подтверждено"
+    time_send = callback_data.time_mark
+    today = datetime.now()
+    time = today.strftime("%Y-%m-%d, %H-%M-%S")
+
+    await callback.bot.send_message(chat_id=channel_id, text=f"Админу {name}\nБыл отправлен запрос {dutie} в {time_send}\nВ {time} запрос получил статус - {conf}")

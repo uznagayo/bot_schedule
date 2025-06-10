@@ -6,6 +6,7 @@ from utils.db import (
     get_schedule,
     get_next_week_sheeets,
     get_requests_id,
+    get_user_role,
 )
 
 from .commands import start_true
@@ -48,7 +49,7 @@ async def this_week(callback: types.CallbackQuery):
         [
             InlineKeyboardButton(
                 text="Назад",
-                callback_data="back_to_main_menu",
+                callback_data="but_key:jun",
             )
         ]
     )
@@ -139,7 +140,7 @@ async def new_schedule_days(callback: types.CallbackQuery):
     buttons.append(
         InlineKeyboardButton(
             text="Назад",
-            callback_data="back_to_main_menu",
+            callback_data="but_key:jun",
         ),
     )
     for i in range(0, len(buttons), 2):
@@ -173,7 +174,7 @@ def new_schedule(shift_ids):
     buttons.append(
         InlineKeyboardButton(
             text="Назад",
-            callback_data=("new_schedule_day_key"),
+            callback_data=("but_key:jun"),
         ),
     )
 
@@ -181,9 +182,13 @@ def new_schedule(shift_ids):
         keybroad.inline_keyboard.append(buttons[i : i + 2])
     return keybroad
 
-def generate_calendar(selected_days: set[int] = None, time: bool = True) -> InlineKeyboardMarkup:
-    if selected_days is None:
+def generate_calendar(selected_days_dict: dict[str, int] = None, time: bool = True, user_id: int = None) -> InlineKeyboardMarkup:
+    if selected_days_dict is None:
         selected_days = set()
+        admin_id = set()
+    else:
+        selected_days  = list(int(days[-2:]) for days in selected_days_dict.keys())
+        admin_id = list(selected_days_dict.values())
 
     now = datetime.now()
     year, month = now.year, now.month
@@ -208,10 +213,17 @@ def generate_calendar(selected_days: set[int] = None, time: bool = True) -> Inli
                 )
             else:
                 if day in selected_days:
-                    text = f'{day}✅'
-                    week_buttons.append(InlineKeyboardButton(
-                        text=text,
-                        callback_data=CalendarCb(action="delete", day=str(day), time=time).pack(),),)
+                    if admin_id[selected_days.index(day)] == user_id:
+                        text = f'{day}✅'
+                        week_buttons.append(InlineKeyboardButton(
+                            text=text,
+                            callback_data=CalendarCb(action="delete", day=str(day), time=time).pack(),),)
+                    else:
+                        text = f'{day}❌'
+                        week_buttons.append(InlineKeyboardButton(
+                            text=text,
+                            callback_data=CalendarCb(action="admin_show", day=str(day), time=time, user_id=admin_id[selected_days.index(day)]).pack(),),)
+
                 else:
                     text = f'{day}'
                     week_buttons.append(InlineKeyboardButton(
@@ -222,7 +234,7 @@ def generate_calendar(selected_days: set[int] = None, time: bool = True) -> Inli
     buttons.append([
         InlineKeyboardButton(
             text="Назад",
-            callback_data="back_to_main_menu",
+            callback_data="but_key:ancient",
         ),
     ])
 
