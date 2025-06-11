@@ -6,20 +6,27 @@ from loguru import logger
 from .callback_classes import AncientDutiesCb
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 from .config import channel_id
-from .duties import ancient_admin_duties, junior_admin_duties
+from .duties import ancient_admin_duties, junior_admin_duties, ancient_admin_duties_cb
+from random import choice, randrange
 
 
 reminders_router = Router()
 
 
-# tomorrow = today + timedelta(days=1)
-# tomorrow_str = tomorrow.strftime("%Y-%m-%d")
+def choose_dutie():
+    key = choice(ancient_admin_duties)
+    value = ancient_admin_duties_cb[ancient_admin_duties.index(key)]
+    dutie = {key: value}
+    return dutie
 
 
-# if today.weekday() == 4 and today.hour() == 12:
+flowers = {"Нужно полить цветы":
+              "flowers_rem"}
 
+kassa = {"Пора считать кассу, и сверить безнал":
+              "kassa_check"}
 
-async def reminders(bot: Bot):
+async def reminders_req(bot: Bot):
     # today = datetime.now()
     # today_str = today.strftime("%Y-%m-%d")
     while True:
@@ -27,16 +34,31 @@ async def reminders(bot: Bot):
         today.strftime("%Y-%m-%d")
 
         if (today.weekday == 3 or today.weekday == 0) and today.hour == 9 and today.minute == 30:
-            await flowers_rem(bot)
+            await ancient_universal_rem(duties=flowers, bot=bot)
 
         if today.hour == 17 and today.minute == 30:
-            await kassa_rem(bot)
+            await ancient_universal_rem(duties=kassa, bot=bot)
             # await bot.send_message(chat_id=357434524, text='test')
 
         if today.weekday() == 4 and today.hour == 13 and today.minute == 30:
             await select_schedule_rem(bot)
 
         await asyncio.sleep(60)
+
+
+async def reminders_rand(bot: Bot):
+    while True:
+        today = datetime.now()
+        today.strftime("%Y-%m-%d")        
+        mins = randrange(3600, 5400)
+
+        if today.hour >= 6 and today.hour <=18:
+            await ancient_universal_rem(duties=choose_dutie(), bot=bot)
+
+        await asyncio.sleep(mins)
+
+
+
 
 
 async def select_schedule_rem(bot: Bot):
@@ -49,17 +71,6 @@ async def select_schedule_rem(bot: Bot):
             logger.info(f"message send to {id}")
         except Exception as e:
             await logger.exception(id, e)
-
-async def kassa_rem(bot: Bot):
-    duties = {"Пора считать кассу, и сверить безнал":
-              "kassa_check"}
-    await ancient_universal_rem(duties=duties, bot=bot)
-
-
-async def flowers_rem(bot: Bot):
-    duties = {"Нужно полить цветы":
-              "flowers_rem"}
-    await ancient_universal_rem(duties, bot)
 
 async def ancient_universal_rem(duties: dict[str, str], bot: Bot):
     dutie_str = str(list(duties.keys())[0])

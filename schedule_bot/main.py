@@ -3,7 +3,7 @@ from aiogram import Bot, Dispatcher
 from handlers import all_routers
 from handlers.config import settings
 from filters import IsRegisteredMiddleware
-from handlers.reminders import reminders
+from handlers.reminders import reminders_req, reminders_rand
 from loguru import logger
 
 
@@ -16,8 +16,11 @@ async def main():
     
     try:
 
-        asyncio.create_task(reminders(bot))
-        logger.success('done\n')
+        asyncio.create_task(reminders_req(bot))
+        logger.success('done_req\n')
+
+        asyncio.create_task(reminders_rand(bot))
+        logger.success('done_rand\n')        
     
     except Exception as e:
         logger.error('not done\n', e)
