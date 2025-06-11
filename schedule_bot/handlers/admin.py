@@ -1,5 +1,5 @@
 from aiogram import Router, types, F
-from aiogram.types import Message
+from aiogram.types import CallbackQuery, Message
 import sqlite3
 import csv
 import os
@@ -18,15 +18,8 @@ admin_router = Router()
 #     )
 
 
-@admin_router.message(lambda message: message.text.startswith("расписание "))
-async def send_schedule_file(message: types.Message):
-    user_id = message.from_user.id
-    if user_id != 357434524:
-        return
-    try:
-        # Ожидаем сообщение вида "расписание 2025-05-01 2025-05-10"
-        _, start_str, end_str = message.text.split()
-
+async def send_schedule_file(start_str, end_str, callback: CallbackQuery, admin: bool = True):
+    if admin:
         with sqlite3.connect(DB_PATH) as conn:
             cursor = conn.cursor()
             cursor.execute(
@@ -42,30 +35,42 @@ async def send_schedule_file(message: types.Message):
             shifts = cursor.fetchall()
 
         if not shifts:
-            await message.answer("Нет смен за выбранный период.")
+            await callback.answer("Нет смен за выбранный период.", show_alert=True)
             return
+        
+    else:
+        with sqlite3.connect(DB_PATH) as conn:
+            cursor = conn.cursor()
+            cursor.execute(
+                """
+                SELECT ancient_schedule.date, ancient_schedule.day_night, users.full_name
+                FROM ancient_schedule
+                JOIN users ON ancient_schedule.user_id = users.id
+                WHERE date BETWEEN ? AND ?
+            """,
+                (start_str, end_str),
+            )
+            shifts = cursor.fetchall()
 
-        # Сохраняем как CSV
-        BASE_DIR = os.path.dirname(__file__)
-        file_path = os.path.join(BASE_DIR, 'exports', f"schedule_{start_str} - {end_str}.csv")
+        if not shifts:
+            await callback.answer("Нет смен за выбранный период.", show_alert=True)
+            return        
+    
 
-        os.makedirs(os.path.dirname(file_path), exist_ok=True)
-        with open(file_path, "w", encoding="utf-8-sig", newline="") as f:
+        
+    BASE_DIR = os.path.dirname(__file__)
+    file_path = os.path.join(BASE_DIR, 'exports', f"schedule_{start_str} - {end_str}.csv")
+
+    os.makedirs(os.path.dirname(file_path), exist_ok=True)
+    with open(file_path, "w", encoding="utf-8-sig", newline="") as f:
             writer = csv.writer(f, delimiter=";", lineterminator="\n")
             writer.writerow(["Дата", "Начало", " Конец", "Имя", "День"])
             writer.writerows(shifts)
 
-        file = types.FSInputFile(file_path)
+    file = types.FSInputFile(file_path)
 
-        await message.answer_document(file)
-        os.remove(file_path)
-
-
-    except Exception as e:
-        logger.exception(e)
-        await message.answer(
-            "Неверный формат. Введите: расписание ГГГГ-ММ-ДД ГГГГ-ММ-ДД"
-        )
+    await callback.message.answer_document(file)
+    os.remove(file_path)
 
 
 @admin_router.channel_post(F.photo)

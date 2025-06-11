@@ -32,9 +32,12 @@ from .callback_classes import (
     AssignNewJun,
     CalendarCb,
     AncientDutiesCb,
+    HashKeyAdmin,
 )
 from .commands import buttons
 from datetime import datetime
+import calendar
+from .admin import send_schedule_file
 
 
 callbacks_router = Router()
@@ -109,11 +112,89 @@ async def back_to_main_menu(callback: CallbackQuery):
     await callback.message.edit_reply_markup(reply_markup=start_true(callback))
 
 
-@callbacks_router.callback_query(lambda c: c.data == "hash_key")
-async def hash(callback: CallbackQuery):
-    await callback.message.answer(
-        "Введи начальную и конечную дату в формате ГГГГ-ММ-ДД через пробел и не забудь кодовое слово!"
-    )
+@callbacks_router.callback_query(HashKeyAdmin.filter())
+async def hash(callback: CallbackQuery, callback_data: HashKeyAdmin):
+    sample = callback_data.sample
+    month = callback_data.month
+
+    keyboard = InlineKeyboardMarkup(inline_keyboard=[])
+    text = "Главное меню"
+    back_button_cb = "back_to_main_menu"
+    buttons = [InlineKeyboardButton(
+                    text="Назад",
+                    callback_data=back_button_cb)]
+    if sample == "show":
+        back_button_cb = HashKeyAdmin(sample="month").pack()
+
+        text = "Выбери кто нужен"
+        buttons = [
+            InlineKeyboardButton(
+                text="Младшие",
+                callback_data=HashKeyAdmin(sample="jun", month=month).pack(),
+            ),
+            InlineKeyboardButton(
+                text="Старшие",
+                callback_data=HashKeyAdmin(sample="anc", month=month).pack(),
+            ),
+            InlineKeyboardButton(
+                text="Назад",
+                callback_data=back_button_cb,
+            ),
+        ]
+
+    if sample == "month":
+        text = "Выбери месяц"
+        months_name = [
+            "Январь",
+            "Февраль",
+            "Март",
+            "Апрель",
+            "Май",
+            "Июнь",
+            "Июль",
+            "Август",
+            "Сентябрь",
+            "Октябрь",
+            "Ноябрь",
+            "Декабрь",
+        ]
+        months_int = [i for i in range(1, 13)]
+
+        buttons = [InlineKeyboardButton(
+                    text=m,
+                    callback_data=HashKeyAdmin(
+                        sample="show", month=months_int[months_name.index(m)]
+                    ).pack(),)
+                for m in months_name]
+        
+        buttons.append(
+            
+                InlineKeyboardButton(
+                    text="Назад",
+                    callback_data=back_button_cb,
+                ),
+            
+        )
+
+    if sample == "jun" or sample == "anc":
+        start = datetime(2025, month, 1).strftime("%Y-%m-%d")
+        last_day = calendar.monthrange(2025, month)[1]
+        end = datetime(2025, month, last_day).strftime("%Y-%m-%d")
+        if sample == "jun":
+            await send_schedule_file(start_str=start, end_str=end, callback=callback)
+
+        else:
+            await send_schedule_file(
+                start_str=start, end_str=end, callback=callback, admin=False
+            )
+        text = "Готово"
+
+    for i in range(0, len(buttons), 2):
+        keyboard.inline_keyboard.append(buttons[i : i + 2])
+        
+    await callback.message.edit_text(text=text)
+    await callback.message.edit_reply_markup(reply_markup=keyboard)
+
 
 
 @callbacks_router.callback_query(lambda c: c.data.startswith("shift_key"))
@@ -150,7 +231,8 @@ async def delete_shift(callback: CallbackQuery):
         await callback.answer("Смена удалена!", show_alert=True)
         await this_week(callback)
         await callback.bot.send_message(
-            chat_id=channel_id, text=f"{callback.from_user.first_name} удалил смену {id}"
+            chat_id=channel_id,
+            text=f"{callback.from_user.first_name} удалил смену {id}",
         )
     except Exception as e:
         logger.exception(e)
@@ -574,7 +656,9 @@ async def but_key(callback: CallbackQuery):
 
 
 @callbacks_router.callback_query(AncientDutiesCb.filter())
-async def ancient_duties_callback(callback: CallbackQuery, callback_data: AncientDutiesCb, bot: Bot):
+async def ancient_duties_callback(
+    callback: CallbackQuery, callback_data: AncientDutiesCb, bot: Bot
+):
     data = get_users_data(telegram_id=callback.from_user.id)
     __, name, __ = data[0]
     dutie = callback_data.dutie
@@ -583,4 +667,7 @@ async def ancient_duties_callback(callback: CallbackQuery, callback_data: Ancien
     today = datetime.now()
     time = today.strftime("%Y-%m-%d, %H-%M-%S")
 
-    await callback.bot.send_message(chat_id=channel_id, text=f"Админу {name}\nБыл отправлен запрос {dutie} в {time_send}\nВ {time} запрос получил статус - {conf}")
+    await callback.bot.send_message(
+        chat_id=channel_id,
+        text=f"Админу {name}\nБыл отправлен запрос {dutie} в {time_send}\nВ {time} запрос получил статус - {conf}",
+    )
