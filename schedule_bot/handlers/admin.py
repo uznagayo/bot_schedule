@@ -29,6 +29,7 @@ async def send_schedule_file(start_str, end_str, callback: CallbackQuery, admin:
                 JOIN users ON schedule.user_id = users.id
                 JOIN shifts ON schedule.shift_id = shifts.id
                 WHERE date BETWEEN ? AND ?
+                ORDER BY date
             """,
                 (start_str, end_str),
             )
@@ -47,6 +48,7 @@ async def send_schedule_file(start_str, end_str, callback: CallbackQuery, admin:
                 FROM ancient_schedule
                 JOIN users ON ancient_schedule.user_id = users.id
                 WHERE date BETWEEN ? AND ?
+                ORDER BY date
             """,
                 (start_str, end_str),
             )
