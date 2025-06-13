@@ -27,18 +27,15 @@ kassa = {"Пора считать кассу, и сверить безнал":
               "kassa_check"}
 
 async def reminders_req(bot: Bot):
-    # today = datetime.now()
-    # today_str = today.strftime("%Y-%m-%d")
     while True:
         today = datetime.now()
         today.strftime("%Y-%m-%d")
 
-        if (today.weekday == 3 or today.weekday == 0) and today.hour == 9 and today.minute == 30:
+        if (today.weekday() == 3 or today.weekday() == 0) and today.hour == 9 and today.minute == 30:
             await ancient_universal_rem(duties=flowers, bot=bot)
 
         if today.hour == 17 and today.minute == 30:
             await ancient_universal_rem(duties=kassa, bot=bot)
-            # await bot.send_message(chat_id=357434524, text='test')
 
         if today.weekday() == 4 and today.hour == 13 and today.minute == 30:
             await select_schedule_rem(bot)
@@ -52,7 +49,7 @@ async def reminders_rand(bot: Bot):
         today.strftime("%Y-%m-%d")        
         mins = randrange(3600, 5400)
 
-        if today.hour >= 6 and today.hour <=18:
+        if today.hour >= 6 and today.hour <=17:
             await ancient_universal_rem(duties=choose_dutie(), bot=bot)
 
         await asyncio.sleep(mins)

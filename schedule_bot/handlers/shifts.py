@@ -35,7 +35,6 @@ async def this_week(callback: types.CallbackQuery):
         await callback.message.edit_reply_markup(reply_markup=start_true(callback))
         return
 
-    # message1 = "Твое расписание на текущую неделю:\n"
     keybroad = InlineKeyboardMarkup(inline_keyboard=[])
     for id, day, date, start, end in schedule:
 
@@ -146,13 +145,12 @@ async def new_schedule_days(callback: types.CallbackQuery):
     for i in range(0, len(buttons), 2):
         keybroad.inline_keyboard.append(buttons[i : i + 2])
 
-    text = f"Сободные смены: {dates[0]} -- {dates[-1]}"
+    text = f"Свободные смены: {dates[0]} -- {dates[-1]}"
     await callback.message.edit_text(text)
     await callback.message.edit_reply_markup(reply_markup=keybroad)
 
 
 def new_schedule(shift_ids):
-    # print(shift_ids)
 
     shift_id, __, times, dates = get_next_week_sheeets()
     keybroad = InlineKeyboardMarkup(inline_keyboard=[])
@@ -162,8 +160,6 @@ def new_schedule(shift_ids):
             k = shift_id.index(i)
         else:
             continue
-        # print(k)
-        # print(days[k])
         buttons.append(
             InlineKeyboardButton(
                 text="-".join(times[k].split(",")),

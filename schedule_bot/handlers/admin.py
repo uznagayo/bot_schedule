@@ -11,12 +11,6 @@ from utils.db import save_mem_id
 admin_router = Router()
 
 
-# @admin_router.message(lambda m: m.text == "Hash")
-# async def hash(message: types.Message):
-#     await message.answer(
-#         "Введи начальную и конечную дату в формате ГГГГ-ММ-ДД через пробел и не забудь кодовое слово!"
-#     )
-
 
 async def send_schedule_file(start_str, end_str, callback: CallbackQuery, admin: bool = True):
     if admin:

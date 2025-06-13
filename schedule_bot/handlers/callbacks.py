@@ -94,10 +94,6 @@ async def my_schedule(callback: CallbackQuery):
 @callbacks_router.callback_query(lambda c: c.data.startswith("new_schedule_day_key"))
 async def send_shedule(callback: CallbackQuery):
     logger.info(f"{callback.from_user.first_name} act_send_new_shedule")
-    # user_role = get_user_role(callback.from_user.id)
-    # if user_role == "ancient":
-    #     await callback.answer("Эта кнопка не тебе")
-    #     return
 
     if not new_schedule_days(callback):
         await callback.answer("Свободных смен нету", show_alert=True)
@@ -515,7 +511,7 @@ async def assign_flow(callback: CallbackQuery, callback_data: AssignNewJun):
     elif action == "select_end":
         keyboard = InlineKeyboardMarkup(inline_keyboard=[])
         buttons = []
-        for i in range(23):
+        for i in range(24):
             buttons.append(
                 InlineKeyboardButton(
                     text=(f"{i}:00"),
@@ -666,6 +662,9 @@ async def ancient_duties_callback(
     time_send = callback_data.time_mark
     today = datetime.now()
     time = today.strftime("%Y-%m-%d, %H-%M-%S")
+
+    await callback.answer(text="Запрос закрыт", show_alert=True)
+    await callback.message.delete()
 
     await callback.bot.send_message(
         chat_id=channel_id,
