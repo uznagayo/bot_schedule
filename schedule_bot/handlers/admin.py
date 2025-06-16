@@ -160,6 +160,7 @@ async def add_user_conf(callback: CallbackQuery, state: FSMContext):
 async def state_clear(callback: CallbackQuery, state: FSMContext):
     await state.clear()
     await callback.answer(text="Операция отменена", show_alert=True)
+    await callback.message.delete()
     await callback.message.answer(text="Главное меню", reply_markup=start_true(callback))
     
 

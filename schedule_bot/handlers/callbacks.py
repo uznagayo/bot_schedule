@@ -1,4 +1,4 @@
-from aiogram import Router, Bot
+from aiogram import Router, Bot, F
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton, CallbackQuery
 import sqlite3
 from .config import DB_PATH, channel_id
@@ -39,6 +39,7 @@ from .commands import buttons
 from datetime import datetime
 import calendar
 from .admin import send_schedule_file
+from .duties import shift_close
 
 
 callbacks_router = Router()
@@ -689,4 +690,12 @@ async def hash_func(callback: CallbackQuery, callback_data: HashActions):
     await callback.message.edit_text(text="Функционал Феля")
     await callback.message.edit_reply_markup(reply_markup=keybroad)
 
+
+
+# @callbacks_router.callback_query(lambda c: c.data.startswith("closing"))
+# async def closing(callback: CallbackQuery):
+#     text = shift_close
+#     keybroad = InlineKeyboardMarkup(inline_keyboard=[
+        
+#     ])
 

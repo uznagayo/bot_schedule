@@ -39,6 +39,10 @@ def buttons(admin: bool = True) -> InlineKeyboardMarkup:
             text="Назад",
             callback_data="back_to_main_menu",
         ),
+        InlineKeyboardButton(
+            text="Зыкрытие смены",
+            callback_data="start_shift_closing"
+        ),
     ]
 
     if not admin:

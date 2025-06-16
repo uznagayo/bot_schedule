@@ -3,16 +3,36 @@ from config import DB_PATH
 from loguru import logger
 # import csv, os
 # import utils.db
+from duties import shift_close
+from random import choice, shuffle
 
 
-conn = sqlite3.connect(DB_PATH)
-cursor = conn.cursor()
-# cursor.execute('SELECT * FROM users')
-# print(cursor.fetchall())
+text = shift_close
+# text.append("0")
+# text_a = [i for i in text if i != "0" ]
+# text[3] = "0"
+# text[text.index(text_a[0])]="0"
+# logger.info(text_a)
+# logger.info(text)
+indexes =[]
+shuffle(text)
+print(text, shift_close)
 
-cursor.execute(
-    "UPDATE users SET role = 'ancient' WHERE full_name = 'Пятиминутка'"
-)
+shuffle(text)
+print(text, shift_close)
+
+
+
+
+
+# conn = sqlite3.connect(DB_PATH)
+# cursor = conn.cursor()
+# # cursor.execute('SELECT * FROM users')
+# # print(cursor.fetchall())
+
+# cursor.execute(
+#     "UPDATE users SET role = 'ancient' WHERE full_name = 'Пятиминутка'"
+# )
 
 # conn = sqlite3.connect(DB_PATH)
 # cursor = conn.cursor()
@@ -74,8 +94,8 @@ cursor.execute(
 
 # cursor.execute(f'DELETE FROM schedule WHERE user_id = {1}')
 
-logger.success("done")
-conn.commit()
-conn.close()
+# logger.success("done")
+# conn.commit()
+# conn.close()
 
 # print(utils.db.get_users_name(1))
