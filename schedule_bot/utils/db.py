@@ -135,9 +135,7 @@ def get_onday_admins(day: datetime):
         return cursor.fetchall
 
 
-def get_users_data(
-        user_id = None, telegram_id = None, role = None
-):
+def get_users_data(user_id=None, telegram_id=None, role=None):
     with sqlite3.connect(DB_PATH) as conn:
         cursor = conn.cursor()
         cursor.execute(
@@ -148,12 +146,8 @@ def get_users_data(
         AND (telegram_id = ? OR ? IS NULL) 
         AND (role = ? OR ? IS NULL)
         """,
-            (
-                user_id, user_id,
-                telegram_id, telegram_id,
-                role, role
-            ),
-        ) 
+            (user_id, user_id, telegram_id, telegram_id, role, role),
+        )
         return cursor.fetchall()
 
 
@@ -354,7 +348,18 @@ def insert_uncommon_sheet(user_id, start, end):
         )
 
 
+# def doSQLQuery # takes int db_string and payload
+# 1. Make connectiong
+# 2. dp query
+# 3. commit
+
+
+# def InsertUser # takes in user
+# doSQLQuery('SQL', user)
+
+
 def get_ancient_sheets(time: bool = True, date: str = ""):
+
     if time:
         t = "День"
     else:
@@ -436,3 +441,16 @@ def insert_ancient_sheet(
                 (date, user_id, time),
             )
             conn.commit()
+
+
+def add_user(full_name: str, telegram_id: int, role: str):
+    with sqlite3.connect(DB_PATH) as conn:
+        cursor = conn.cursor()
+        cursor.execute(
+            """
+                INSERT OR REPLACE INTO users (telegram_id, full_name, role)
+                VALUES (?, ?, ?)
+                """,
+            (telegram_id, full_name, role),
+        )
+        conn.commit()

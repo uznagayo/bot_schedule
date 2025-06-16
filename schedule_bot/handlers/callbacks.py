@@ -33,6 +33,7 @@ from .callback_classes import (
     CalendarCb,
     AncientDutiesCb,
     HashKeyAdmin,
+    HashActions,
 )
 from .commands import buttons
 from datetime import datetime
@@ -653,8 +654,7 @@ async def but_key(callback: CallbackQuery):
 
 @callbacks_router.callback_query(AncientDutiesCb.filter())
 async def ancient_duties_callback(
-    callback: CallbackQuery, callback_data: AncientDutiesCb, bot: Bot
-):
+    callback: CallbackQuery, callback_data: AncientDutiesCb):
     data = get_users_data(telegram_id=callback.from_user.id)
     __, name, __ = data[0]
     dutie = callback_data.dutie
@@ -670,3 +670,23 @@ async def ancient_duties_callback(
         chat_id=channel_id,
         text=f"Админу {name}\nБыл отправлен запрос {dutie} в {time_send}\nВ {time} запрос получил статус - {conf}",
     )
+
+@callbacks_router.callback_query(HashActions.filter())
+async def hash_func(callback: CallbackQuery, callback_data: HashActions):
+    buttons = [
+        InlineKeyboardButton(text="Расписание", callback_data=HashKeyAdmin(sample="month").pack(),),
+        InlineKeyboardButton(text="Добавить юзера", callback_data="add_user"),
+        InlineKeyboardButton(
+                text="Назад",
+                callback_data="back_to_main_menu",
+            ),
+    ]
+    keybroad = InlineKeyboardMarkup(inline_keyboard=[])
+
+    for i in range(0, len(buttons), 2):
+        keybroad.inline_keyboard.append(buttons[i : i + 2])
+
+    await callback.message.edit_text(text="Функционал Феля")
+    await callback.message.edit_reply_markup(reply_markup=keybroad)
+
+

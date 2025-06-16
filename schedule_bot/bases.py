@@ -5,8 +5,8 @@ from loguru import logger
 
 
 
-# conn = sqlite3.connect(DB_PATH)
-# cursor = conn.cursor()
+conn = sqlite3.connect(DB_PATH)
+cursor = conn.cursor()
 # with sqlite3.connect(DB_PATH) as conn:
 #     cursor = conn.cursor()
 #     cursor.execute(
@@ -49,7 +49,7 @@ from loguru import logger
 # recipient_id, shift_id = result[0]
 # print(recipient_id, shift_id)
 
-# cursor.execute(f'DELETE FROM ancient_schedule WHERE user_id = {1}')
+cursor.execute(f'DELETE FROM users WHERE full_name = "Толян"')
 
 # cursor.execute(
 #     """
@@ -88,9 +88,9 @@ from loguru import logger
 # FOREIGN KEY(shift_id) REFERENCES shifts(id)
 # )
 # """)
-# print("done")
-# conn.commit()
-# conn.close()
+print("done")
+conn.commit()
+conn.close()
 
 # with sqlite3.connect(DB_PATH) as conn:
 #         cursor = conn.cursor()
@@ -198,23 +198,23 @@ user_id = 1
 #         )
 #         result = cursor.fetchall()
 
-with sqlite3.connect(DB_PATH) as conn:
-        cursor = conn.cursor()
-        cursor.execute(
-            """
-        SELECT id, full_name, telegram_id
-        FROM users
-        WHERE (id = ? OR ? IS NULL) 
-        AND (telegram_id = ? OR ? IS NULL) 
-        AND (role = ? OR ? IS NULL)
-        """,
-            (
-                user_id, user_id,
-                None, None,
-                None, None
-            ),
-        )
-result = cursor.fetchall()
+# with sqlite3.connect(DB_PATH) as conn:
+#         cursor = conn.cursor()
+#         cursor.execute(
+#             """
+#         SELECT id, full_name, telegram_id
+#         FROM users
+#         WHERE (id = ? OR ? IS NULL) 
+#         AND (telegram_id = ? OR ? IS NULL) 
+#         AND (role = ? OR ? IS NULL)
+#         """,
+#             (
+#                 user_id, user_id,
+#                 None, None,
+#                 None, None
+#             ),
+#         )
+# result = cursor.fetchall()
 
 
-print (result)
+# print (result)

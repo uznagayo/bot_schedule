@@ -28,6 +28,9 @@ class AncientDutiesCb(CallbackData, prefix="ancient"):
     time_mark: str
     
 
-class HashKeyAdmin(CallbackData, prefix="hash"):
+class HashKeyAdmin(CallbackData, prefix="shifts"):
     sample: str
     month: int = 0
+
+class HashActions(CallbackData, prefix="hash"):
+    action: str

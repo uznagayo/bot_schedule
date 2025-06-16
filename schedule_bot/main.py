@@ -1,7 +1,7 @@
 import asyncio
 from aiogram import Bot, Dispatcher
 from handlers import all_routers
-from handlers.config import settings
+from handlers.config import settings, storage
 from filters import IsRegisteredMiddleware
 from handlers.reminders import reminders_req, reminders_rand
 from loguru import logger
@@ -9,7 +9,7 @@ from loguru import logger
 
 async def main():
     bot = Bot(token=settings.bot_token)
-    dp = Dispatcher()
+    dp = Dispatcher(storage=storage)
 
     dp.message.middleware(IsRegisteredMiddleware())
     dp.callback_query.middleware(IsRegisteredMiddleware())

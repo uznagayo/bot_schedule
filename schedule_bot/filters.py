@@ -2,7 +2,7 @@ from aiogram import BaseMiddleware
 from aiogram.types import Message, CallbackQuery
 from typing import Callable, Dict, Any, Awaitable
 import sqlite3
-from handlers.config import DB_PATH
+from handlers.config import DB_PATH, channel_id
 from loguru import logger
 
 
@@ -24,8 +24,10 @@ class IsRegisteredMiddleware(BaseMiddleware):
             if isinstance(event, Message):
                 logger.info(event.from_user.id, event.from_user.first_name, "не зарегистрирован")
                 await event.answer("Ты не зарегистрирован в системе.")
+                await event.bot.send_message(chat_id=channel_id, text=f"{event.from_user.id}, {event.from_user.first_name}, не зарегистрирован")
             elif isinstance(event, CallbackQuery):
                 logger.info(event.from_user.id, event.from_user.first_name, "не зарегистрирован")
                 await event.answer("Ты не зарегистрирован в системе.", show_alert=True)
+                await event.bot.send_message(chat_id=channel_id, text=f"{event.from_user.id}, {event.from_user.first_name}, не зарегистрирован")
             return
         return await handler(event, data)

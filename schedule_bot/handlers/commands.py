@@ -1,7 +1,7 @@
 from aiogram import types
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 from utils.db import get_user_role
-from .callback_classes import AssignNewJun, CalendarCb, HashKeyAdmin
+from .callback_classes import AssignNewJun, CalendarCb, HashKeyAdmin, HashActions
 
 
 def buttons(admin: bool = True) -> InlineKeyboardMarkup:
@@ -85,8 +85,8 @@ def start_true(message: types.Message):
     if user_id == 357434524:
         buttons.append(
             InlineKeyboardButton(
-                text="Hash",
-                callback_data=HashKeyAdmin(sample="month").pack(),
+                text="Фель",
+                callback_data=HashActions(action="buttons").pack(),
             ),
         )
 

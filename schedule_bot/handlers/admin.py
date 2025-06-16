@@ -1,11 +1,15 @@
 from aiogram import Router, types, F
-from aiogram.types import CallbackQuery, Message
+from aiogram.types import CallbackQuery, Message, InlineKeyboardButton, InlineKeyboardMarkup
+from aiogram.fsm.context import FSMContext
+from aiogram.filters import StateFilter
 import sqlite3
 import csv
 import os
 from .config import DB_PATH
 from loguru import logger
-from utils.db import save_mem_id
+from utils.db import save_mem_id, add_user
+from .states import AddUserSt
+from .commands import start_true
 
 
 admin_router = Router()
@@ -74,4 +78,89 @@ async def mem_catcher_handler(message: Message):
     file_id = message.photo[-1].file_id
     save_mem_id(file_id)
     print('Сохранено фото')
+
+
+@admin_router.callback_query(F.data == "add_user")
+async def add_user_start(callback: CallbackQuery, state: FSMContext):
+    await callback.message.answer("Введи имя пользователя", reply_markup=InlineKeyboardMarkup(
+        inline_keyboard=[
+            [InlineKeyboardButton(text="ОТМЕНА", callback_data="go_back_state")],
+        ]
+    ))
+    await state.set_state(AddUserSt.name)
+
+@admin_router.message(AddUserSt.name)
+async def add_user_name(message: Message, state: FSMContext):
+    await state.update_data(name=message.text)
+    await message.answer("Введи telegram_id", reply_markup=InlineKeyboardMarkup(
+        inline_keyboard=[
+            [InlineKeyboardButton(text="ОТМЕНА", callback_data="go_back_state")],
+        ]
+    ))
+    await state.set_state(AddUserSt.telegram_id)
+
+@admin_router.message(AddUserSt.telegram_id)
+async def add_user_telegram_id(message: Message, state: FSMContext):
+    await state.update_data(telegram_id=int(message.text))
+
+    keyboard = InlineKeyboardMarkup(
+        inline_keyboard=[
+            [InlineKeyboardButton(text="Младший", callback_data="role:emploee")],
+            [InlineKeyboardButton(text="Старший", callback_data="role:ancient")],
+            [InlineKeyboardButton(text="Игровед", callback_data="role:gm")],
+            [InlineKeyboardButton(text="ОТМЕНА", callback_data="go_back_state")],
+        ]
+    )
+
+    await message.answer("Выбери роль", reply_markup=keyboard)
+    await state.set_state(AddUserSt.role)
+
+@admin_router.callback_query(AddUserSt.role)
+async def add_user_role(callback: CallbackQuery, state: FSMContext):
+    role = callback.data.split(":")[1]
+    await state.update_data(role=role)
+
+    data = await state.get_data()
+
+    name = data["name"]
+    telegram_id = data["telegram_id"]
+
+    await callback.message.answer(text=f"Ты хочешь добавить пользователя\n{name} id: {telegram_id} роль: {role}", reply_markup=InlineKeyboardMarkup(
+        inline_keyboard=[
+            [InlineKeyboardButton(text="Подтверждаю", callback_data="conf")],
+            [InlineKeyboardButton(text="ОТМЕНА", callback_data="go_back_state")],
+        ]
+    ))
+    await state.set_state(AddUserSt.conf)
+
+@admin_router.callback_query(AddUserSt.conf)
+async def add_user_conf(callback: CallbackQuery, state: FSMContext):
+    conf = callback.data
+    await state.update_data(conf=conf)
+
+    data = await state.get_data()
+
+    name = data["name"]
+    telegram_id = data["telegram_id"]
+    role = data["role"]    
+
+    try:
+        add_user(full_name=name, telegram_id=telegram_id, role=role)
+        await state.clear()
+        await callback.answer(text="Пользователь добавлен", show_alert=True)
+        await callback.message.answer(text="Главное меню", reply_markup=start_true(callback))
+    
+    except Exception as e:
+        await state.clear()
+        await callback.answer(text=f"Что-то не то\n{e}", show_alert=True)
+        await callback.message.answer(text="Главное меню", reply_markup=start_true())
+
+
+@admin_router.callback_query(F.data == "go_back_state", StateFilter("*"))
+async def state_clear(callback: CallbackQuery, state: FSMContext):
+    await state.clear()
+    await callback.answer(text="Операция отменена", show_alert=True)
+    await callback.message.answer(text="Главное меню", reply_markup=start_true(callback))
+    
+
 
