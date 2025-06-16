@@ -2,6 +2,7 @@
 **/__pycache__/
 *.py[cod]
 *$py.class
+**/__pycache__/
 
 # Distribution / packaging
 .eggs/
@@ -18,7 +19,7 @@ venv/
 env/
 ENV/
 .ruff_cache
-
+.pyc
 # PyInstaller
 #  Often these are created before PyInstaller builds the exe, so as to inject date/other infos into it.
 *.manifest
