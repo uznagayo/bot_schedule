@@ -16,3 +16,12 @@ class ShiftClosingStages(StatesGroup):
     tea_shelf_stocked = State()         # Чайная полка заполнена
     napkins_ready = State()             # Салфетки на месте        # Расходники в зале есть
     end = State()                    # Завершение процесса закрытия смены
+
+
+class DbUpdate(StatesGroup):
+    action = State()
+    table = State()
+    column = State()
+    value = State()
+    id = State()
+    conf = State()

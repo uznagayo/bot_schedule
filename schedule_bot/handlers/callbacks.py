@@ -38,8 +38,10 @@ from .callback_classes import (
 from .commands import buttons
 from datetime import datetime
 import calendar
-from .admin import send_schedule_file
+from .admin import send_schedule_file, db_func
 from .duties import shift_close
+from .states import DbUpdate
+from aiogram.fsm.context import FSMContext
 
 
 callbacks_router = Router()
@@ -672,22 +674,55 @@ async def ancient_duties_callback(
         text=f"Админу {name}\nБыл отправлен запрос {dutie} в {time_send}\nВ {time} запрос получил статус - {conf}",
     )
 
-@callbacks_router.callback_query(HashActions.filter())
+@callbacks_router.callback_query(HashActions.filter(F.action !="update" and F.action != "delete"))
 async def hash_func(callback: CallbackQuery, callback_data: HashActions):
-    buttons = [
-        InlineKeyboardButton(text="Расписание", callback_data=HashKeyAdmin(sample="month").pack(),),
-        InlineKeyboardButton(text="Добавить юзера", callback_data="add_user"),
-        InlineKeyboardButton(
-                text="Назад",
-                callback_data="back_to_main_menu",
-            ),
-    ]
+    action = callback_data.action
+    data = callback_data.data
+    text = "Функционал Феля"
     keybroad = InlineKeyboardMarkup(inline_keyboard=[])
+    buttons = []
+    if data:
+        text = await db_func(text=f"select|{data}|*")
+
+    if action == "buttons":
+        buttons = [
+            InlineKeyboardButton(text="Расписание", callback_data=HashKeyAdmin(sample="month").pack(),),
+            InlineKeyboardButton(text="Добавить юзера", callback_data="add_user"),
+            InlineKeyboardButton(text="ДБ", callback_data=HashActions(action="show").pack(),),
+            InlineKeyboardButton(
+                    text="Назад",
+                    callback_data="back_to_main_menu",
+                ),
+            ]
+
+    elif action == "show":
+        tables_raw = await db_func(text="select|sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'|name")
+        tables = tables_raw.split("\n")
+        buttons = []
+        for t in tables:
+            buttons.append(
+                InlineKeyboardButton(text=t, callback_data=HashActions(action="select", data=t).pack(),)
+            )
+
+
+    elif action == "select":
+        buttons = [
+            InlineKeyboardButton(text="Редактировать", callback_data=HashActions(action="update", data=data).pack(),),
+            InlineKeyboardButton(text="Удалить", callback_data=HashActions(action="delete", data=data).pack(),),
+            InlineKeyboardButton(
+                    text="Назад",
+                    callback_data=HashActions(action="buttons").pack(),
+                ),
+            ]
+        
+    else:
+        return
+    
 
     for i in range(0, len(buttons), 2):
         keybroad.inline_keyboard.append(buttons[i : i + 2])
 
-    await callback.message.edit_text(text="Функционал Феля")
+    await callback.message.edit_text(text=text)
     await callback.message.edit_reply_markup(reply_markup=keybroad)
 
 

@@ -7,7 +7,7 @@ import csv
 import os
 from .config import DB_PATH
 from loguru import logger
-from utils.db import save_mem_id, add_user
+from utils.db import save_mem_id, add_user, unicue_db_update, unicue_db_select, unicue_db_delete
 from .states import AddUserSt
 from .commands import start_true
 
@@ -71,6 +71,25 @@ async def send_schedule_file(start_str, end_str, callback: CallbackQuery, admin:
 
     await callback.message.answer_document(file)
     os.remove(file_path)
+
+async def db_func(text: str):
+    querry = text.split("|")
+    action = querry[0]
+    data = {}
+    if action == "update":
+        data['table'] = querry[1]
+        data['column'] = querry[2]
+        data['value'] = querry[3]
+        data['id'] = int(querry[4])
+        return unicue_db_update(data=data)
+    elif action == "select":
+        data['table'] = querry[1]
+        data['column'] = querry[2]
+        return unicue_db_select(data=data)
+    elif action == "delete":
+        data['table'] = querry[1]
+        data['id'] = int(querry[4])
+        return unicue_db_delete(data=data)
 
 
 @admin_router.channel_post(F.photo)
@@ -163,5 +182,6 @@ async def state_clear(callback: CallbackQuery, state: FSMContext):
     await callback.message.delete()
     await callback.message.answer(text="Главное меню", reply_markup=start_true(callback))
     
+
 
 

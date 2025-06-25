@@ -34,3 +34,7 @@ class HashKeyAdmin(CallbackData, prefix="shifts"):
 
 class HashActions(CallbackData, prefix="hash"):
     action: str
+    data: str = ""
+
+
+

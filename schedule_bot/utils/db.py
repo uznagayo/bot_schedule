@@ -193,12 +193,6 @@ def get_next_week_sheeets():
             days.append(day)
             times.append(time)
 
-    # print(
-    #     shift_ids,
-    #     days,
-    #     times,
-    #     dates,
-    # )
 
     return shift_ids, days, times, dates
 
@@ -454,3 +448,53 @@ def add_user(full_name: str, telegram_id: int, role: str):
             (telegram_id, full_name, role),
         )
         conn.commit()
+
+
+def unicue_db_update(data: dict):
+    table = data['table']
+    column = data['column']
+    value = data['value']
+    id = data['id']
+    try:
+        with sqlite3.connect(DB_PATH) as conn:
+            cursor = conn.cursor()
+            cursor.execute(f"""
+                    UPDATE {table} SET {column} = ? WHERE id = ?
+                    """, (value, id))
+        return "Done"
+    except Exception as e:
+        return e
+        
+def unicue_db_select(data: dict):
+    table = data['table']
+    column = data['column']
+    try:
+        with sqlite3.connect(DB_PATH) as conn:
+            cursor = conn.cursor()
+            cursor.execute(f"""
+                    SELECT {column}
+                    FROM {table}
+                """)
+            rows = cursor.fetchall()
+            result = "\n".join([" ".join(str(item) for item in row) for row in rows])
+        return result
+    except Exception as e:
+        return e
+    
+def unicue_db_delete(data: dict):
+    table = data['table']
+    id = data['id']
+    try:
+        with sqlite3.connect(DB_PATH) as conn:
+            cursor = conn.cursor()
+            cursor.execute(f"""
+                    DELETE
+                    FROM {table}
+                    WHERE id = {id}
+                """)
+        return "Done"
+    except Exception as e:
+        return e
+
+
+
