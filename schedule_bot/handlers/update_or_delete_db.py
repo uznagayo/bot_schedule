@@ -11,7 +11,7 @@ from .start import start_true
 update_or_delete_db_router = Router()
 
 @update_or_delete_db_router.callback_query(HashActions.filter(F.action == "delete"))
-async def update_db_start(callback: CallbackQuery, callback_data: HashActions, state: FSMContext):
+async def delete_db_start(callback: CallbackQuery, callback_data: HashActions, state: FSMContext):
         await state.update_data(table=callback_data.data)
         await state.update_data(action="delete")
         await callback.message.answer("Введи айди записи", reply_markup=InlineKeyboardMarkup(

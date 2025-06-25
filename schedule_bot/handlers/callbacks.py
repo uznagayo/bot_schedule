@@ -1,6 +1,7 @@
 from aiogram import Router, Bot, F
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton, CallbackQuery
 import sqlite3
+from aiogram.filters import or_f
 from .config import DB_PATH, channel_id
 from utils.db import (
     get_user_id,
@@ -674,7 +675,11 @@ async def ancient_duties_callback(
         text=f"Админу {name}\nБыл отправлен запрос {dutie} в {time_send}\nВ {time} запрос получил статус - {conf}",
     )
 
-@callbacks_router.callback_query(HashActions.filter(F.action !="update" and F.action != "delete"))
+@callbacks_router.callback_query(
+    HashActions.filter(
+        ~F.action.in_(["update", "delete"])
+    )
+)
 async def hash_func(callback: CallbackQuery, callback_data: HashActions):
     action = callback_data.action
     data = callback_data.data
@@ -698,7 +703,6 @@ async def hash_func(callback: CallbackQuery, callback_data: HashActions):
     elif action == "show":
         tables_raw = await db_func(text="select|sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'|name")
         tables = tables_raw.split("\n")
-        buttons = []
         for t in tables:
             buttons.append(
                 InlineKeyboardButton(text=t, callback_data=HashActions(action="select", data=t).pack(),)
@@ -715,7 +719,7 @@ async def hash_func(callback: CallbackQuery, callback_data: HashActions):
                 ),
             ]
         
-    else:
+    elif action =="update" or action == "delete":
         return
     
 
