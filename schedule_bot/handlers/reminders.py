@@ -31,13 +31,13 @@ async def reminders_req(bot: Bot):
         today = datetime.now()
         today.strftime("%Y-%m-%d")
 
-        if (today.weekday() == 3 or today.weekday() == 0) and today.hour == 9 and today.minute == 30:
+        if (today.weekday() == 3 or today.weekday() == 0) and today.hour == 9 and today.minute == 40:
             await ancient_universal_rem(duties=flowers, bot=bot)
 
-        if today.hour == 17 and today.minute == 30:
+        if today.hour == 17 and today.minute == 40:
             await ancient_universal_rem(duties=kassa, bot=bot)
 
-        if today.weekday() == 4 and today.hour == 13 and today.minute == 30:
+        if today.weekday() == 4 and today.hour == 14 and today.minute == 40:
             await select_schedule_rem(bot)
 
         await asyncio.sleep(60)
@@ -67,7 +67,7 @@ async def select_schedule_rem(bot: Bot):
             )
             logger.info(f"message send to {id}")
         except Exception as e:
-            await logger.exception(id, e)
+            logger.info(str(id), e)
 
 async def ancient_universal_rem(duties: dict[str, str], bot: Bot):
     dutie_str = str(list(duties.keys())[0])
@@ -116,7 +116,7 @@ async def ancient_universal_rem(duties: dict[str, str], bot: Bot):
                 chat_id=channel_id,
                 text=f"{dutie_cb} message sended to {name} in {time}"
             )
-            logger.info(f"message send to {name}")
+            logger.info(f"{dutie_cb} message send to {name}")
         except Exception as e:
             await logger.exception(name, telegram_id, e)
 

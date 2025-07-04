@@ -1,0 +1,12 @@
+{
+	"folders": [
+		{
+			"path": "."
+		},
+		{
+			"name": "SSH FS - bot_workspace",
+			"uri": "ssh://bot_workspace/"
+		}
+	],
+	"settings": {}
+}
