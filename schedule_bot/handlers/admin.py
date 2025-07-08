@@ -5,7 +5,7 @@ from aiogram.filters import StateFilter
 import sqlite3
 import csv
 import os
-from .config import DB_PATH
+from .config import DB_PATH, channel_id
 from loguru import logger
 from utils.db import save_mem_id, add_user, unicue_db_update, unicue_db_select, unicue_db_delete
 from .states import AddUserSt
@@ -124,7 +124,7 @@ async def add_user_telegram_id(message: Message, state: FSMContext):
 
     keyboard = InlineKeyboardMarkup(
         inline_keyboard=[
-            [InlineKeyboardButton(text="Младший", callback_data="role:emploee")],
+            [InlineKeyboardButton(text="Младший", callback_data="role:employee")],
             [InlineKeyboardButton(text="Старший", callback_data="role:ancient")],
             [InlineKeyboardButton(text="Игровед", callback_data="role:gm")],
             [InlineKeyboardButton(text="ОТМЕНА", callback_data="go_back_state")],
@@ -183,5 +183,25 @@ async def state_clear(callback: CallbackQuery, state: FSMContext):
     await callback.message.answer(text="Главное меню", reply_markup=start_true(callback))
     
 
+@admin_router.callback_query(lambda c: c.data == "register_start")
+async def register_basic_user(callback: CallbackQuery):
+    full_name = callback.from_user.first_name
+    telegram_id = callback.from_user.id
+    role = "user"
+    
+    try:
+        add_user(full_name, telegram_id, role)
+        await callback.message.answer(
+            text="Вы успешно зарегистрированы как базовый " \
+            "пользователь и можете смотреть мемы. Для этого " \
+            "воспользуйтесь коммандой /send_meme"
+            )
+    except Exception as e:
+        await callback.answer(text="Чет не то", show_alert=True)
+        await callback.bot.send_message(
+            chat_id=channel_id,
+                    text=f"{telegram_id}, {full_name}, не смог зарегаться. {e}"
+        )
+    
 
 

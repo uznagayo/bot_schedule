@@ -1,5 +1,5 @@
 from aiogram import BaseMiddleware
-from aiogram.types import Message, CallbackQuery
+from aiogram.types import Message, CallbackQuery, InlineKeyboardButton, InlineKeyboardMarkup
 from typing import Callable, Dict, Any, Awaitable
 import sqlite3
 from handlers.config import DB_PATH, channel_id
@@ -21,24 +21,35 @@ class IsRegisteredMiddleware(BaseMiddleware):
         data: Dict[str, Any],
     ) -> Any:
         user_id = event.from_user.id
+
+        if isinstance(event, CallbackQuery) and event.data == "register_start":
+            return await handler(event, data)
+
         if not is_user_registered(user_id):
+            keyboard = InlineKeyboardMarkup(
+                inline_keyboard=[
+                    [InlineKeyboardButton(text="Зарегистрироваться", callback_data="register_start")]
+                ]
+            )
+            msg_text = "Ты не зарегистрирован в системе."
+
             if isinstance(event, Message):
-                logger.info(
-                    f"{event.from_user.id}, {event.from_user.first_name}, не зарегистрирован"
-                )
-                await event.answer("Ты не зарегистрирован в системе.")
+                logger.info(f"{user_id}, {event.from_user.first_name}, не зарегистрирован")
+                await event.answer(msg_text, reply_markup=keyboard)
                 await event.bot.send_message(
                     chat_id=channel_id,
-                    text=f"{event.from_user.id}, {event.from_user.first_name}, не зарегистрирован",
+                    text=f"{user_id}, {event.from_user.first_name}, не зарегистрирован",
                 )
             elif isinstance(event, CallbackQuery):
-                logger.infof(
-                    f"{event.from_user.id}, {event.from_user.first_name}, не зарегистрирован"
-                )
-                await event.answer("Ты не зарегистрирован в системе.", show_alert=True)
+                logger.info(f"{user_id}, {event.from_user.first_name}, не зарегистрирован")
+                await event.message.answer(msg_text, reply_markup=keyboard)
                 await event.bot.send_message(
                     chat_id=channel_id,
-                    text=f"{event.from_user.id}, {event.from_user.first_name}, не зарегистрирован",
+                    text=f"{user_id}, {event.from_user.first_name}, не зарегистрирован",
                 )
-            return
+                await event.answer(show_alert=False)
+
+            return 
+
         return await handler(event, data)
+

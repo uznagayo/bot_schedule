@@ -74,6 +74,11 @@ def start_true(message: types.Message):
     if role == "employee":
         buttons.extend(buttons_jun)
 
+    elif role == "user":
+        return InlineKeyboardMarkup(inline_keyboard=[
+            InlineKeyboardButton(text="Ниче")
+        ])
+
     else:
         buttons.extend(
             [

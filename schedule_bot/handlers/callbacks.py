@@ -730,11 +730,3 @@ async def hash_func(callback: CallbackQuery, callback_data: HashActions):
     await callback.message.edit_reply_markup(reply_markup=keybroad)
 
 
-
-# @callbacks_router.callback_query(lambda c: c.data.startswith("closing"))
-# async def closing(callback: CallbackQuery):
-#     text = shift_close
-#     keybroad = InlineKeyboardMarkup(inline_keyboard=[
-        
-#     ])
-
