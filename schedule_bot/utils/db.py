@@ -179,9 +179,12 @@ def get_next_week_sheeets(week: bool = True):
         dates.extend([dates[4], dates[5], dates[5], dates[6], dates[6], dates[5]])
         if num:
             for i in num:
-                shifts_name.pop(shift_ids.index(i))
-                dates.pop(shift_ids.index(i))
-                shift_ids.remove(i)
+                if i == 14:
+                    continue
+                else:
+                    shifts_name.pop(shift_ids.index(i))
+                    dates.pop(shift_ids.index(i))
+                    shift_ids.remove(i)
 
         days = []
         times = []
