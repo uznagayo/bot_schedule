@@ -151,9 +151,9 @@ def get_users_data(user_id=None, telegram_id=None, role=None):
         return cursor.fetchall()
 
 
-def get_next_week_sheeets():
+def get_next_week_sheeets(week: bool = True):
     shift_ids = list(range(1, 14))
-    next_monday = datetime.today() + timedelta(days=7 - datetime.today().weekday())
+    next_monday = datetime.today() + timedelta(days=7 - datetime.today().weekday()) if week else datetime.today() - timedelta(datetime.today().weekday())
     next_sunday = next_monday + timedelta(days=6)
     dates = [(next_monday + timedelta(days=k)).strftime("%Y-%m-%d") for k in range(7)]
     with sqlite3.connect(DB_PATH) as conn:

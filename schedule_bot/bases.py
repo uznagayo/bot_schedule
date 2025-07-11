@@ -1,12 +1,18 @@
 import sqlite3
 from handlers.config import DB_PATH
 from loguru import logger
+from datetime import datetime, timedelta
 
 
+week = False
+next_monday = datetime.today() + timedelta(days=7 - datetime.today().weekday()) if week else datetime.today() - timedelta(datetime.today().weekday())
+next_sunday = next_monday + timedelta(days=6)
+
+print(next_monday, next_sunday)
 
 
-conn = sqlite3.connect(DB_PATH)
-cursor = conn.cursor()
+# conn = sqlite3.connect(DB_PATH)
+# cursor = conn.cursor()
 # with sqlite3.connect(DB_PATH) as conn:
 #     cursor = conn.cursor()
 #     cursor.execute(
@@ -49,7 +55,12 @@ cursor = conn.cursor()
 # recipient_id, shift_id = result[0]
 # print(recipient_id, shift_id)
 
-cursor.execute(f'DELETE FROM users WHERE full_name = "Толян"')
+# cursor.execute("SELECT * FROM shifts")
+
+# # cursor.execute("PRAGMA table_info(schedule)")
+# print(cursor.fetchall())
+
+# cursor.execute(f'DELETE FROM users WHERE full_name = "Толян"')
 
 # cursor.execute(
 #     """
@@ -88,9 +99,9 @@ cursor.execute(f'DELETE FROM users WHERE full_name = "Толян"')
 # FOREIGN KEY(shift_id) REFERENCES shifts(id)
 # )
 # """)
-print("done")
-conn.commit()
-conn.close()
+# print("done")
+# conn.commit()
+# conn.close()
 
 # with sqlite3.connect(DB_PATH) as conn:
 #         cursor = conn.cursor()

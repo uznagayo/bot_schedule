@@ -14,6 +14,9 @@ def buttons(admin: bool = True) -> InlineKeyboardMarkup:
             text="Запросы на обмен", callback_data="shift_exchenge_requests_key"
         ),
         InlineKeyboardButton(
+            text="Свободные смены", callback_data="this_week_free_shifts"
+        ),
+        InlineKeyboardButton(
             text="Назад",
             callback_data="back_to_main_menu",
         ),
@@ -24,7 +27,7 @@ def buttons(admin: bool = True) -> InlineKeyboardMarkup:
             text="Вызвать младшего", callback_data="emploee_summon_key"
         ),
         InlineKeyboardButton(
-            text="Поставить младшего на сегодня",
+            text="Поставить младшего",
             callback_data=AssignNewJun(action="run", user_id=0, start=0, end=0).pack(),
         ),
         InlineKeyboardButton(
@@ -40,7 +43,7 @@ def buttons(admin: bool = True) -> InlineKeyboardMarkup:
             callback_data="back_to_main_menu",
         ),
         InlineKeyboardButton(
-            text="Зыкрытие смены",
+            text="Закрытие смены",
             callback_data="start_shift_closing"
         ),
     ]
@@ -69,6 +72,9 @@ def start_true(message: types.Message):
         InlineKeyboardButton(
             text="Запросы на обмен", callback_data="shift_exchenge_requests_key"
         ),
+        InlineKeyboardButton(
+            text="Свободные смены", callback_data="this_week_free_shifts"
+        ),
     ]
 
     if role == "employee":
@@ -79,7 +85,7 @@ def start_true(message: types.Message):
             InlineKeyboardButton(text="Ниче")
         ])
 
-    else:
+    elif role == "ancient" or role == "VMF":
         buttons.extend(
             [
                 InlineKeyboardButton(

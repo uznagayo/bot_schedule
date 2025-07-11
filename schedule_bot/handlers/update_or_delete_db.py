@@ -63,7 +63,7 @@ async def update_db_id(message: Message, state: FSMContext):
 
         if action == "update":
             column = data["column"]
-            value = data["value"]
+            value = data["value"].capitalize() if column == "full_name" else data["value"]
             id = data["id"]
             text = f"Ты хочешь изменить запись в таблице {table} № {id}\n{column} -> {value}"
         else:

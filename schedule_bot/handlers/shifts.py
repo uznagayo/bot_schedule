@@ -117,8 +117,8 @@ async def get_outcome_requests(callback: types.CallbackQuery):
     await callback.message.edit_reply_markup(reply_markup=keybroad) 
 
 
-async def new_schedule_days(callback: types.CallbackQuery):
-    __, days, __, dates = get_next_week_sheeets()
+async def new_schedule_days(callback: types.CallbackQuery, week: bool = True):
+    __, days, __, dates = get_next_week_sheeets(week)
     keybroad = InlineKeyboardMarkup(inline_keyboard=[])
     days_ctrl = []
     buttons = []
@@ -130,7 +130,7 @@ async def new_schedule_days(callback: types.CallbackQuery):
             days_ctrl.append(day)
             buttons.append(
                 InlineKeyboardButton(
-                    text=day, callback_data=(f"new_shift_day_key,{day}")
+                    text=day, callback_data=(f"new_shift_day_key,{day},{int(week)}")
                 ),
             )
         else:
@@ -150,9 +150,9 @@ async def new_schedule_days(callback: types.CallbackQuery):
     await callback.message.edit_reply_markup(reply_markup=keybroad)
 
 
-def new_schedule(shift_ids):
+def new_schedule(shift_ids, week: bool = True):
 
-    shift_id, __, times, dates = get_next_week_sheeets()
+    shift_id, __, times, dates = get_next_week_sheeets(week)
     keybroad = InlineKeyboardMarkup(inline_keyboard=[])
     buttons = []
     for i in shift_ids:

@@ -54,10 +54,11 @@ callbacks_router = Router()
 @callbacks_router.callback_query(lambda c: c.data.startswith("new_shift_day_key"))
 async def new_shift_day_key(callback: CallbackQuery):
     data = callback.data
-    day = data.split(",")[-1]
+    day = data.split(",")[1]
+    week = bool(int(data.split(",")[-1]))
     # print(day)
     shift_ids = get_shift_id_onday(day)
-    keybroad = new_schedule(shift_ids)
+    keybroad = new_schedule(shift_ids, week)
     await callback.message.edit_reply_markup(reply_markup=keybroad)
 
 
@@ -730,3 +731,13 @@ async def hash_func(callback: CallbackQuery, callback_data: HashActions):
     await callback.message.edit_reply_markup(reply_markup=keybroad)
 
 
+
+@callbacks_router.callback_query(lambda c: c.data == "this_week_free_shifts")
+async def this_week_free_shifts(callback: CallbackQuery):
+    logger.info(f"{callback.from_user.first_name} act_send_new_shedule")
+
+    if not new_schedule_days(callback, week=False):
+        await callback.answer("Свободных смен нету", show_alert=True)
+        return
+    else:
+        await new_schedule_days(callback, week=False)    
