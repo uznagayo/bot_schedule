@@ -92,7 +92,7 @@ async def update_dp_conf(callback: CallbackQuery, state: FSMContext):
 
         if action == "update":
             column = data["column"]
-            value = data["value"]
+            value = data["value"].capitalize() if column == "full_name" else data["value"]
             id = data["id"]
         else:
             column = 0
