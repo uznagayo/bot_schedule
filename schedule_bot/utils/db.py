@@ -330,13 +330,17 @@ def shift_swap_handler(request_id, action):
 
 
 def insert_uncommon_sheet(user_id, start, end):
+
+    coef = get_salary_coef(user_id)
+
+    cost = (end - start) * coef
     date = datetime.today()
     date_str = date.strftime("%Y-%m-%d")
     with sqlite3.connect(DB_PATH) as conn:
         conn.execute(
             """
-        INSERT OR REPLACE INTO schedule (user_id, date, shift_id, actual_start, actual_end)
-        VALUES (?, ?, ?, ?, ?)
+        INSERT OR REPLACE INTO schedule (user_id, date, shift_id, actual_start, actual_end, cost)
+        VALUES (?, ?, ?, ?, ?, ?)
         """,
             (
                 user_id,
@@ -344,6 +348,7 @@ def insert_uncommon_sheet(user_id, start, end):
                 14,
                 (str(start) + ":00"),
                 (str(end) + ":00"),
+                cost,
             ),
         )
 
@@ -551,5 +556,34 @@ def get_salary(user_id):
         )
         costs = cursor.fetchall()
 
-        salary = sum([int(i[0]) for i in costs if i[0] is not None])
+        salary = ((sum([int(i[0]) for i in costs if i[0] is not None]) + 49) // 50) * 50
     return salary
+
+
+def make_salary_db_request(user_id: int, sum: int):
+    date = datetime.today().strftime("%Y-%m-%d")
+    with sqlite3.connect(DB_PATH) as conn:
+        cursor = conn.cursor()
+        cursor.execute(
+            """
+                INSERT OR REPLACE INTO given_salaries (user_id, date, sum)
+                VALUES (?, ?, ?)
+                """,
+            (user_id, date, sum),
+        )
+        conn.commit()
+
+
+def delete_salaries(user_id: int):
+    end_date = datetime.today()
+    mount_start = end_date.replace(day=1)
+    with sqlite3.connect(DB_PATH) as conn:
+        cursor = conn.cursor()
+        cursor.execute(
+            """
+        UPDATE schedule SET cost = 0 
+        WHERE user_id = ? and date BETWEEN ? AND ?
+        
+        """,
+            (user_id, mount_start.strftime("%Y-%m-%d"), end_date.strftime("%Y-%m-%d")),
+        )

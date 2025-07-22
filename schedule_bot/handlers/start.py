@@ -17,20 +17,20 @@ async def start_command(message: types.Message):
     salary = get_salary(user_id)
     name = get_user_name(user_id)
     schedule = get_schedule(user_id, start_of_week)
-    schedule_true = 'Твое расписание на неделю:\n'
+    schedule_true = "Твое расписание на неделю:\n"
     if not schedule:
-        schedule_true = 'На этой неделе у тебя нет смен'
+        schedule_true = "На этой неделе у тебя нет смен"
     else:
         for __, day, date, start, end in schedule:
             schedule_true += f"{day} ({date}) - {start}–{end}\n"
-    hello = f'Привет {name}!\n{schedule_true}\nТы заработал {salary} рубасов на данный момент'
+    hello = f"Привет {name}!\n{schedule_true}\nТы получишь {salary} рубасов на данный момент"
     await message.answer(text=hello, reply_markup=start_true(message))
 
 
 @start_router.message(Command("send_meme"))
 async def send_meme_handler(message: types.Message):
     meme = send_meme()
-    logger.info(f'{message.from_user.first_name} заказал мем')
+    logger.info(f"{message.from_user.first_name} заказал мем")
     await message.answer_photo(photo=meme, caption="Вот тебе мем, епт")
 
 

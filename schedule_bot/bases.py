@@ -279,38 +279,38 @@ from datetime import datetime, timedelta
 #         )
 #         result = cursor.fetchall()
 
-with sqlite3.connect(DB_PATH) as conn:
-    cursor = conn.cursor()
-    cursor.execute(
-        """
-        ALTER TABLE schedule ADD cost1 INTEGER DEFAULT (0);
-        """
-    )
-result = cursor.fetchall()
+# with sqlite3.connect(DB_PATH) as conn:
+#     cursor = conn.cursor()
+#     cursor.execute(
+#         """
+#         CREATE TABLE given_salaries (
+#         id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+#         user_id INTEGER,
+#         date TEXT,
+#         sum INTEGER,
+#         FOREIGN KEY(user_id) REFERENCES users(id)
+#             )
+
+#         """
+#     )
+#     print("done")
 
 
 # print (result)
 
-
-# def get_salary(user_id: int):
-#     end_date = datetime.today()
-#     mount_start = end_date.replace(day=1)
-#     print(user_id, mount_start, end_date)
-#     with sqlite3.connect(DB_PATH) as conn:
-#         cursor = conn.cursor()
-#         cursor.execute(
-#             """
-#         SELECT cost
-#         FROM schedule
-#         WHERE user_id = ? AND date BETWEEN ? AND ?
-#         ORDER BY date
-#         """,
-#             (user_id, mount_start.strftime("%Y-%m-%d"), end_date.strftime("%Y-%m-%d")),
-#         )
-#         costs = cursor.fetchall()
-#         print(costs)
-#         salary = sum([i[0] for i in costs if i[0] is not None])
-#     return salary
-
-
-# print(get_salary(1))
+def get_users_data(user_id=None, telegram_id=None, role=None):
+    with sqlite3.connect(DB_PATH) as conn:
+        cursor = conn.cursor()
+        cursor.execute(
+            """
+        SELECT id, full_name, telegram_id
+        FROM users
+        WHERE (id = ? OR ? IS NULL)
+        AND (telegram_id = ? OR ? IS NULL) 
+        AND (role = ? OR ? IS NULL)
+        """,
+            (user_id, user_id, telegram_id, telegram_id, role, role),
+        )
+        return cursor.fetchall()
+    
+print(get_users_data())

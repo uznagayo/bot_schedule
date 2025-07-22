@@ -758,3 +758,7 @@ async def this_week_free_shifts(callback: CallbackQuery):
         return
     else:
         await new_schedule_days(callback, week=False)
+
+
+
+

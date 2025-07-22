@@ -7,7 +7,7 @@ import csv
 import os
 from .config import DB_PATH, channel_id
 from loguru import logger
-from utils.db import save_mem_id, add_user, unicue_db_update, unicue_db_select, unicue_db_delete
+from utils.db import save_mem_id, add_user, unicue_db_update, unicue_db_select, unicue_db_delete, make_salary_db_request, delete_salaries
 from .states import AddUserSt
 from .commands import start_true
 
