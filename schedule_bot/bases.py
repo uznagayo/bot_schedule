@@ -4,15 +4,55 @@ from loguru import logger
 from datetime import datetime, timedelta
 
 
-week = False
-next_monday = datetime.today() + timedelta(days=7 - datetime.today().weekday()) if week else datetime.today() - timedelta(datetime.today().weekday())
-next_sunday = next_monday + timedelta(days=6)
+# week = False
+# next_monday = datetime.today() + timedelta(days=7 - datetime.today().weekday()) if week else datetime.today() - timedelta(datetime.today().weekday())
+# next_sunday = next_monday + timedelta(days=6)
 
-print(next_monday, next_sunday)
+# print(next_monday, next_sunday)
 
 
-# conn = sqlite3.connect(DB_PATH)
-# cursor = conn.cursor()
+conn = sqlite3.connect(DB_PATH)
+cursor = conn.cursor()
+
+cursor.execute("""
+CREATE TABLE IF NOT EXISTS role_coefficients (
+    role TEXT PRIMARY KEY,
+    salary_coef INTEGER NOT NULL
+);
+""")
+
+cursor.executemany("INSERT OR REPLACE INTO role_coefficients (role, salary_coef) VALUES (?, ?)", [
+    ("ancient", 180),
+    ("employee", 150)
+])
+
+
+cursor.execute("ALTER TABLE users ADD COLUMN salary_coef INTEGER")
+
+cursor.execute("""
+UPDATE users
+SET salary_coef = (
+    SELECT salary_coef
+    FROM role_coefficients
+    WHERE role_coefficients.role = users.role
+)
+WHERE EXISTS (
+    SELECT 1
+    FROM role_coefficients
+    WHERE role_coefficients.role = users.role
+);
+""")
+
+conn.commit()
+
+cursor.execute("SELECT * FROM users")
+for row in cursor.fetchall():
+    print(row)
+
+# cursor.execute("SELECT * FROM role_coefficients")
+# for row in cursor.fetchall():
+#     print(row)
+
 # with sqlite3.connect(DB_PATH) as conn:
 #     cursor = conn.cursor()
 #     cursor.execute(
@@ -99,9 +139,9 @@ print(next_monday, next_sunday)
 # FOREIGN KEY(shift_id) REFERENCES shifts(id)
 # )
 # """)
-# print("done")
+print("done")
 # conn.commit()
-# conn.close()
+conn.close()
 
 # with sqlite3.connect(DB_PATH) as conn:
 #         cursor = conn.cursor()
@@ -190,7 +230,7 @@ print(next_monday, next_sunday)
 #             """, (start_str, end_str))
 #             shifts = cursor.fetchall()
 # print(shifts)
-user_id = 1
+# user_id = 1
 # first_day = '2025-05-01'
 # last_day = '2025-06-30'
 # t = "День"
