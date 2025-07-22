@@ -153,7 +153,11 @@ def get_users_data(user_id=None, telegram_id=None, role=None):
 
 def get_next_week_sheeets(week: bool = True):
     shift_ids = list(range(1, 14))
-    next_monday = datetime.today() + timedelta(days=7 - datetime.today().weekday()) if week else datetime.today() - timedelta(datetime.today().weekday())
+    next_monday = (
+        datetime.today() + timedelta(days=7 - datetime.today().weekday())
+        if week
+        else datetime.today() - timedelta(datetime.today().weekday())
+    )
     next_sunday = next_monday + timedelta(days=6)
     dates = [(next_monday + timedelta(days=k)).strftime("%Y-%m-%d") for k in range(7)]
     with sqlite3.connect(DB_PATH) as conn:
@@ -195,7 +199,6 @@ def get_next_week_sheeets(week: bool = True):
             )
             days.append(day)
             times.append(time)
-
 
     return shift_ids, days, times, dates
 
@@ -454,50 +457,99 @@ def add_user(full_name: str, telegram_id: int, role: str):
 
 
 def unicue_db_update(data: dict):
-    table = data['table']
-    column = data['column']
-    value = data['value']
-    id = data['id']
+    table = data["table"]
+    column = data["column"]
+    value = data["value"]
+    id = data["id"]
     try:
         with sqlite3.connect(DB_PATH) as conn:
             cursor = conn.cursor()
-            cursor.execute(f"""
+            cursor.execute(
+                f"""
                     UPDATE {table} SET {column} = ? WHERE id = ?
-                    """, (value, id))
+                    """,
+                (value, id),
+            )
         return "Done"
     except Exception as e:
         return e
-        
+
+
 def unicue_db_select(data: dict):
-    table = data['table']
-    column = data['column']
+    table = data["table"]
+    column = data["column"]
     try:
         with sqlite3.connect(DB_PATH) as conn:
             cursor = conn.cursor()
-            cursor.execute(f"""
+            cursor.execute(
+                f"""
                     SELECT {column}
                     FROM {table}
-                """)
+                """
+            )
             rows = cursor.fetchall()
             result = "\n".join([" ".join(str(item) for item in row) for row in rows])
         return result
     except Exception as e:
         return e
-    
+
+
 def unicue_db_delete(data: dict):
-    table = data['table']
-    id = data['id']
+    table = data["table"]
+    id = data["id"]
     try:
         with sqlite3.connect(DB_PATH) as conn:
             cursor = conn.cursor()
-            cursor.execute(f"""
+            cursor.execute(
+                f"""
                     DELETE
                     FROM {table}
                     WHERE id = {id}
-                """)
+                """
+            )
         return "Done"
     except Exception as e:
         return e
 
 
+def get_salary_coef(user_id: int) -> int:
+    conn = sqlite3.connect(DB_PATH)
+    cursor = conn.cursor()
 
+    cursor.execute(
+        """
+        SELECT rc.salary_coef
+        FROM users u
+        JOIN role_coefficients rc ON u.role = rc.role
+        WHERE u.id = ?
+    """,
+        (user_id,),
+    )
+
+    result = cursor.fetchone()
+    conn.close()
+
+    if result:
+        return result[0]
+    else:
+        raise ValueError(f"Не удалось найти коэффициент для user_id = {user_id}")
+
+
+def get_salary(user_id):
+    end_date = datetime.today()
+    mount_start = end_date.replace(day=1)
+    with sqlite3.connect(DB_PATH) as conn:
+        cursor = conn.cursor()
+        cursor.execute(
+            """
+        SELECT cost
+        FROM schedule
+        WHERE user_id = ? AND date BETWEEN ? AND ?
+        ORDER BY date
+        """,
+            (user_id, mount_start.strftime("%Y-%m-%d"), end_date.strftime("%Y-%m-%d")),
+        )
+        costs = cursor.fetchall()
+
+        salary = sum([int(i[0]) for i in costs if i[0] is not None])
+    return salary

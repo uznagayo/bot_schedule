@@ -235,3 +235,5 @@ def generate_calendar(selected_days_dict: dict[str, int] = None, time: bool = Tr
     ])
 
     return InlineKeyboardMarkup(inline_keyboard=buttons)
+
+

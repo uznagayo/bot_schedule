@@ -1,6 +1,6 @@
 from aiogram import Router, types, Bot
 from aiogram.filters import Command
-from utils.db import send_meme, get_user_name, get_schedule, get_user_id
+from utils.db import send_meme, get_user_name, get_schedule, get_user_id, get_salary
 from .commands import start_true
 from datetime import datetime, timedelta
 from loguru import logger
@@ -14,6 +14,7 @@ async def start_command(message: types.Message):
     start_of_week = today - timedelta(days=today.weekday())
     id = message.from_user.id
     user_id = get_user_id(id)
+    salary = get_salary(user_id)
     name = get_user_name(user_id)
     schedule = get_schedule(user_id, start_of_week)
     schedule_true = 'Твое расписание на неделю:\n'
@@ -22,7 +23,7 @@ async def start_command(message: types.Message):
     else:
         for __, day, date, start, end in schedule:
             schedule_true += f"{day} ({date}) - {start}–{end}\n"
-    hello = f'Привет {name}!\n{schedule_true}'
+    hello = f'Привет {name}!\n{schedule_true}\nТы заработал {salary} рубасов на данный момент'
     await message.answer(text=hello, reply_markup=start_true(message))
 
 

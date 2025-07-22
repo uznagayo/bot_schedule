@@ -20,18 +20,21 @@ def choose_dutie():
     return dutie
 
 
-flowers = {"Нужно полить цветы":
-              "flowers_rem"}
+flowers = {"Нужно полить цветы": "flowers_rem"}
 
-kassa = {"Пора считать кассу, и сверить безнал":
-              "kassa_check"}
+kassa = {"Пора считать кассу, и сверить безнал": "kassa_check"}
+
 
 async def reminders_req(bot: Bot):
     while True:
         today = datetime.now()
         today.strftime("%Y-%m-%d")
 
-        if (today.weekday() == 3 or today.weekday() == 0) and today.hour == 9 and today.minute == 40:
+        if (
+            (today.weekday() == 3 or today.weekday() == 0)
+            and today.hour == 9
+            and today.minute == 40
+        ):
             await ancient_universal_rem(duties=flowers, bot=bot)
 
         if today.hour == 17 and today.minute == 40:
@@ -46,16 +49,13 @@ async def reminders_req(bot: Bot):
 async def reminders_rand(bot: Bot):
     while True:
         today = datetime.now()
-        today.strftime("%Y-%m-%d")        
+        today.strftime("%Y-%m-%d")
         mins = randrange(3600, 5400)
 
-        if today.hour >= 6 and today.hour <=17:
+        if today.hour >= 6 and today.hour <= 17:
             await ancient_universal_rem(duties=choose_dutie(), bot=bot)
 
         await asyncio.sleep(mins)
-
-
-
 
 
 async def select_schedule_rem(bot: Bot):
@@ -69,10 +69,10 @@ async def select_schedule_rem(bot: Bot):
         except Exception as e:
             logger.info(str(id), e)
 
+
 async def ancient_universal_rem(duties: dict[str, str], bot: Bot):
     dutie_str = str(list(duties.keys())[0])
     dutie_cb = str(list(duties.values())[0])
-
 
     today = datetime.now()
     time = today.strftime("%Y-%m-%d, %H-%M-%S")
@@ -114,11 +114,11 @@ async def ancient_universal_rem(duties: dict[str, str], bot: Bot):
             )
             await bot.send_message(
                 chat_id=channel_id,
-                text=f"{dutie_cb} message sended to {name} in {time}"
+                text=f"{dutie_cb} message sended to {name} in {time}",
             )
             logger.info(f"{dutie_cb} message send to {name}")
         except Exception as e:
-            await logger.exception(name, telegram_id, e)
+            logger.exception(name, telegram_id, e)
 
 
 async def sheet_rem(bot: Bot):

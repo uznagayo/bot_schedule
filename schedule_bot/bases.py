@@ -11,43 +11,73 @@ from datetime import datetime, timedelta
 # print(next_monday, next_sunday)
 
 
-conn = sqlite3.connect(DB_PATH)
-cursor = conn.cursor()
-
-cursor.execute("""
-CREATE TABLE IF NOT EXISTS role_coefficients (
-    role TEXT PRIMARY KEY,
-    salary_coef INTEGER NOT NULL
-);
-""")
-
-cursor.executemany("INSERT OR REPLACE INTO role_coefficients (role, salary_coef) VALUES (?, ?)", [
-    ("ancient", 180),
-    ("employee", 150)
-])
+# conn = sqlite3.connect(DB_PATH)
+# cursor = conn.cursor()
 
 
-cursor.execute("ALTER TABLE users ADD COLUMN salary_coef INTEGER")
+# cursor.execute("PRAGMA foreign_keys = OFF;")  # временно отключаем, чтобы переопределить структуру
 
-cursor.execute("""
-UPDATE users
-SET salary_coef = (
-    SELECT salary_coef
-    FROM role_coefficients
-    WHERE role_coefficients.role = users.role
-)
-WHERE EXISTS (
-    SELECT 1
-    FROM role_coefficients
-    WHERE role_coefficients.role = users.role
-);
-""")
+# # 1. Переименовываем старую таблицу
+# cursor.execute("ALTER TABLE users RENAME TO users_old;")
 
-conn.commit()
+# # 2. Создаём новую таблицу без salary_coef
+# cursor.execute("""
+# CREATE TABLE users (
+#     id INTEGER PRIMARY KEY,
+#     telegram_id INTEGER UNIQUE
+#     full_name TEXT NOT NULL,
+#     role TEXT NOT NULL,
+#     FOREIGN KEY (role) REFERENCES role_coefficients(role)
+# );
+# """)
 
-cursor.execute("SELECT * FROM users")
-for row in cursor.fetchall():
-    print(row)
+# # 3. Копируем данные
+# cursor.execute("""
+# INSERT INTO users (id, telegram_id, full_name, role)
+# SELECT id, telegram_id, full_name, role FROM users_old;
+# """)
+
+# # 4. Удаляем старую таблицу
+# cursor.execute("DROP TABLE users_old;")
+
+# # 5. Включаем обратно внешние ключи
+# cursor.execute("PRAGMA foreign_keys = ON;")
+
+
+# cursor.execute("""
+# CREATE TABLE IF NOT EXISTS role_coefficients (
+#     role TEXT PRIMARY KEY,
+#     salary_coef INTEGER NOT NULL
+# );
+# """)
+
+# cursor.executemany("INSERT OR REPLACE INTO role_coefficients (role, salary_coef) VALUES (?, ?)", [
+#     ("ancient", 180),
+#     ("employee", 150)
+# ])
+
+
+# cursor.execute("ALTER TABLE users ADD COLUMN salary_coef INTEGER")
+
+# cursor.execute("""
+# UPDATE users
+# SET salary_coef = (
+#     SELECT salary_coef
+#     FROM role_coefficients
+#     WHERE role_coefficients.role = users.role
+# )
+# WHERE EXISTS (
+#     SELECT 1
+#     FROM role_coefficients
+#     WHERE role_coefficients.role = users.role
+# );
+# """)
+
+# conn.commit()
+
+# cursor.execute("SELECT * FROM users")
+# for row in cursor.fetchall():
+#     print(row)
 
 # cursor.execute("SELECT * FROM role_coefficients")
 # for row in cursor.fetchall():
@@ -139,9 +169,9 @@ for row in cursor.fetchall():
 # FOREIGN KEY(shift_id) REFERENCES shifts(id)
 # )
 # """)
-print("done")
+# print("done")
 # conn.commit()
-conn.close()
+# conn.close()
 
 # with sqlite3.connect(DB_PATH) as conn:
 #         cursor = conn.cursor()
@@ -202,9 +232,9 @@ conn.close()
 #         """,
 #     )
 #     result = cursor.fetchall()
-    
+
 # print(result)
-        
+
 
 # print(get_users_name(45612354995))
 
@@ -240,7 +270,7 @@ conn.close()
 #             """
 #             SELECT *
 #             FROM ancient_schedule
-#             WHERE 
+#             WHERE
 #                 date BETWEEN ? AND ?
 #                 AND day_night = ?
 #             ORDER BY date
@@ -249,23 +279,38 @@ conn.close()
 #         )
 #         result = cursor.fetchall()
 
-# with sqlite3.connect(DB_PATH) as conn:
-#         cursor = conn.cursor()
-#         cursor.execute(
-#             """
-#         SELECT id, full_name, telegram_id
-#         FROM users
-#         WHERE (id = ? OR ? IS NULL) 
-#         AND (telegram_id = ? OR ? IS NULL) 
-#         AND (role = ? OR ? IS NULL)
-#         """,
-#             (
-#                 user_id, user_id,
-#                 None, None,
-#                 None, None
-#             ),
-#         )
-# result = cursor.fetchall()
+with sqlite3.connect(DB_PATH) as conn:
+    cursor = conn.cursor()
+    cursor.execute(
+        """
+        ALTER TABLE schedule ADD cost1 INTEGER DEFAULT (0);
+        """
+    )
+result = cursor.fetchall()
 
 
 # print (result)
+
+
+# def get_salary(user_id: int):
+#     end_date = datetime.today()
+#     mount_start = end_date.replace(day=1)
+#     print(user_id, mount_start, end_date)
+#     with sqlite3.connect(DB_PATH) as conn:
+#         cursor = conn.cursor()
+#         cursor.execute(
+#             """
+#         SELECT cost
+#         FROM schedule
+#         WHERE user_id = ? AND date BETWEEN ? AND ?
+#         ORDER BY date
+#         """,
+#             (user_id, mount_start.strftime("%Y-%m-%d"), end_date.strftime("%Y-%m-%d")),
+#         )
+#         costs = cursor.fetchall()
+#         print(costs)
+#         salary = sum([i[0] for i in costs if i[0] is not None])
+#     return salary
+
+
+# print(get_salary(1))

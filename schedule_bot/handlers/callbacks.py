@@ -16,6 +16,7 @@ from utils.db import (
     get_ancient_sheets,
     insert_ancient_sheet,
     get_user_name,
+    get_salary_coef,
 )
 from .shifts import (
     new_schedule,
@@ -69,19 +70,23 @@ async def new_shift_key(callback: CallbackQuery):
         await callback.answer("Ты не зарегистрирован.")
         return
 
+    coef = get_salary_coef(user_id)
+
     data = callback.data
 
     _, date_str, shift_id, start_time, end_time = data.split(",")
     logger.info(
         f"{callback.from_user.first_name} choose {date_str} {shift_id} {start_time} {end_time}"
     )
+    cost = (-int(start_time[:-3]) + int(end_time[:-3])) * coef
+
     with sqlite3.connect(DB_PATH) as conn:
         conn.execute(
             """
-        INSERT OR REPLACE INTO schedule (user_id, date, shift_id, actual_start, actual_end)
-        VALUES (?, ?, ?, ?, ?)
+        INSERT OR REPLACE INTO schedule (user_id, date, shift_id, actual_start, actual_end, cost)
+        VALUES (?, ?, ?, ?, ?, ?)
         """,
-            (user_id, date_str, int(shift_id), start_time, end_time),
+            (user_id, date_str, int(shift_id), start_time, end_time, cost),
         )
 
     await callback.answer(
@@ -122,9 +127,7 @@ async def hash(callback: CallbackQuery, callback_data: HashKeyAdmin):
     keyboard = InlineKeyboardMarkup(inline_keyboard=[])
     text = "Главное меню"
     back_button_cb = "back_to_main_menu"
-    buttons = [InlineKeyboardButton(
-                    text="Назад",
-                    callback_data=back_button_cb)]
+    buttons = [InlineKeyboardButton(text="Назад", callback_data=back_button_cb)]
     if sample == "show":
         back_button_cb = HashKeyAdmin(sample="month").pack()
 
@@ -162,20 +165,21 @@ async def hash(callback: CallbackQuery, callback_data: HashKeyAdmin):
         ]
         months_int = [i for i in range(1, 13)]
 
-        buttons = [InlineKeyboardButton(
-                    text=m,
-                    callback_data=HashKeyAdmin(
-                        sample="show", month=months_int[months_name.index(m)]
-                    ).pack(),)
-                for m in months_name]
-        
+        buttons = [
+            InlineKeyboardButton(
+                text=m,
+                callback_data=HashKeyAdmin(
+                    sample="show", month=months_int[months_name.index(m)]
+                ).pack(),
+            )
+            for m in months_name
+        ]
+
         buttons.append(
-            
-                InlineKeyboardButton(
-                    text="Назад",
-                    callback_data=back_button_cb,
-                ),
-            
+            InlineKeyboardButton(
+                text="Назад",
+                callback_data=back_button_cb,
+            ),
         )
 
     if sample == "jun" or sample == "anc":
@@ -193,10 +197,9 @@ async def hash(callback: CallbackQuery, callback_data: HashKeyAdmin):
 
     for i in range(0, len(buttons), 2):
         keyboard.inline_keyboard.append(buttons[i : i + 2])
-        
+
     await callback.message.edit_text(text=text)
     await callback.message.edit_reply_markup(reply_markup=keyboard)
-
 
 
 @callbacks_router.callback_query(lambda c: c.data.startswith("shift_key"))
@@ -492,7 +495,7 @@ async def assign_flow(callback: CallbackQuery, callback_data: AssignNewJun):
     elif action == "select_start":
         keyboard = InlineKeyboardMarkup(inline_keyboard=[])
         buttons = []
-        for i in range(23):
+        for i in range(1, 25):
             buttons.append(
                 InlineKeyboardButton(
                     text=(f"{i}:00"),
@@ -517,7 +520,7 @@ async def assign_flow(callback: CallbackQuery, callback_data: AssignNewJun):
     elif action == "select_end":
         keyboard = InlineKeyboardMarkup(inline_keyboard=[])
         buttons = []
-        for i in range(24):
+        for i in range(1, 25):
             buttons.append(
                 InlineKeyboardButton(
                     text=(f"{i}:00"),
@@ -659,7 +662,8 @@ async def but_key(callback: CallbackQuery):
 
 @callbacks_router.callback_query(AncientDutiesCb.filter())
 async def ancient_duties_callback(
-    callback: CallbackQuery, callback_data: AncientDutiesCb):
+    callback: CallbackQuery, callback_data: AncientDutiesCb
+):
     data = get_users_data(telegram_id=callback.from_user.id)
     __, name, __ = data[0]
     dutie = callback_data.dutie
@@ -676,10 +680,9 @@ async def ancient_duties_callback(
         text=f"Админу {name}\nБыл отправлен запрос {dutie} в {time_send}\nВ {time} запрос получил статус - {conf}",
     )
 
+
 @callbacks_router.callback_query(
-    HashActions.filter(
-        ~F.action.in_(["update", "delete"])
-    )
+    HashActions.filter(~F.action.in_(["update", "delete"]))
 )
 async def hash_func(callback: CallbackQuery, callback_data: HashActions):
     action = callback_data.action
@@ -692,44 +695,58 @@ async def hash_func(callback: CallbackQuery, callback_data: HashActions):
 
     if action == "buttons":
         buttons = [
-            InlineKeyboardButton(text="Расписание", callback_data=HashKeyAdmin(sample="month").pack(),),
-            InlineKeyboardButton(text="Добавить юзера", callback_data="add_user"),
-            InlineKeyboardButton(text="ДБ", callback_data=HashActions(action="show").pack(),),
             InlineKeyboardButton(
-                    text="Назад",
-                    callback_data="back_to_main_menu",
-                ),
-            ]
+                text="Расписание",
+                callback_data=HashKeyAdmin(sample="month").pack(),
+            ),
+            InlineKeyboardButton(text="Добавить юзера", callback_data="add_user"),
+            InlineKeyboardButton(
+                text="ДБ",
+                callback_data=HashActions(action="show").pack(),
+            ),
+            InlineKeyboardButton(
+                text="Назад",
+                callback_data="back_to_main_menu",
+            ),
+        ]
 
     elif action == "show":
-        tables_raw = await db_func(text="select|sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'|name")
+        tables_raw = await db_func(
+            text="select|sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'|name"
+        )
         tables = tables_raw.split("\n")
         for t in tables:
             buttons.append(
-                InlineKeyboardButton(text=t, callback_data=HashActions(action="select", data=t).pack(),)
+                InlineKeyboardButton(
+                    text=t,
+                    callback_data=HashActions(action="select", data=t).pack(),
+                )
             )
-
 
     elif action == "select":
         buttons = [
-            InlineKeyboardButton(text="Редактировать", callback_data=HashActions(action="update", data=data).pack(),),
-            InlineKeyboardButton(text="Удалить", callback_data=HashActions(action="delete", data=data).pack(),),
             InlineKeyboardButton(
-                    text="Назад",
-                    callback_data=HashActions(action="buttons").pack(),
-                ),
-            ]
-        
-    elif action =="update" or action == "delete":
+                text="Редактировать",
+                callback_data=HashActions(action="update", data=data).pack(),
+            ),
+            InlineKeyboardButton(
+                text="Удалить",
+                callback_data=HashActions(action="delete", data=data).pack(),
+            ),
+            InlineKeyboardButton(
+                text="Назад",
+                callback_data=HashActions(action="buttons").pack(),
+            ),
+        ]
+
+    elif action == "update" or action == "delete":
         return
-    
 
     for i in range(0, len(buttons), 2):
         keybroad.inline_keyboard.append(buttons[i : i + 2])
 
     await callback.message.edit_text(text=text)
     await callback.message.edit_reply_markup(reply_markup=keybroad)
-
 
 
 @callbacks_router.callback_query(lambda c: c.data == "this_week_free_shifts")
@@ -740,4 +757,4 @@ async def this_week_free_shifts(callback: CallbackQuery):
         await callback.answer("Свободных смен нету", show_alert=True)
         return
     else:
-        await new_schedule_days(callback, week=False)    
+        await new_schedule_days(callback, week=False)
